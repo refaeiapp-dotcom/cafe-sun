@@ -1,41 +1,102 @@
-<!-- Firebase SDK -->
-<script type="module">
-  // استدعاء المكتبات المطلوبة
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // إعدادات Firebase الخاصة بتطبيقك
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
-    authDomain: "my-restaurant-aba99.firebaseapp.com",
-    projectId: "my-restaurant-aba99",
-    storageBucket: "my-restaurant-aba99.appspot.com",
-    messagingSenderId: "512969391867",
-    appId: "1:512969391867:web:36a528665b3469871a3a5e",
-    measurementId: "G-XR5ZGKEZK8"
-  };
-
-  // تهيئة Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // لما المستخدم يضغط على زر "إتمام الطلب"
-  document.getElementById("submitOrder").addEventListener("click", async () => {
-    try {
-      // مثال: بيانات تجريبية
-      const orderData = {
-        tableNumber: 5,
-        note: document.getElementById("note").value || "بدون ملاحظات",
-        createdAt: new Date().toISOString()
-      };
-
-      // إضافة البيانات إلى Firestore داخل collection اسمه "orders"
-      const docRef = await addDoc(collection(db, "orders"), orderData);
-
-      alert("تم إرسال الطلب بنجاح ✅ \nID: " + docRef.id);
-    } catch (e) {
-      console.error("Error adding document: ", e);
-      alert("حدث خطأ أثناء إرسال الطلب ❌");
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة العميل - مقهى</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      text-align: right;
+      margin: 20px;
+      background: #f9f9f9;
     }
-  });
-</script>
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="title">طلب جديد</h1>
+    <label for="note">ملاحظات الطلب:</label>
+    <textarea id="note" rows="4" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+    <br>
+    <button id="submitOrder">إتمام الطلب</button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // إعدادات Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
+      authDomain: "my-restaurant-aba99.firebaseapp.com",
+      projectId: "my-restaurant-aba99",
+      storageBucket: "my-restaurant-aba99.appspot.com",
+      messagingSenderId: "512969391867",
+      appId: "1:512969391867:web:36a528665b3469871a3a5e",
+      measurementId: "G-XR5ZGKEZK8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // جلب رقم الطاولة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNumber = urlParams.get("table") || "غير محدد";
+
+    // تحديث العنوان
+    document.getElementById("title").innerText = "طلب جديد - طاولة " + tableNumber;
+
+    // إرسال الطلب
+    document.getElementById("submitOrder").addEventListener("click", async () => {
+      try {
+        const orderData = {
+          tableNumber: tableNumber,
+          note: document.getElementById("note").value || "بدون ملاحظات",
+          createdAt: new Date().toISOString()
+        };
+
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+
+        alert("تم إرسال الطلب بنجاح ✅ \nرقم الطلب: " + docRef.id);
+      } catch (e) {
+        console.error("Error adding document: ", e);
+        alert("حدث خطأ أثناء إرسال الطلب ❌");
+      }
+    });
+  </script>
+</body>
+</html>
