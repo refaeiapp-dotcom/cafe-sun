@@ -14,6 +14,7 @@
     #payBtn { background: #28a745; color: white; display: none; }
     #totalBox { margin-top: 15px; font-size: 18px; font-weight: bold; }
     #message { margin-top: 15px; font-size: 18px; color: #007bff; display: none; }
+    #notes { width: 95%; height: 60px; margin-top: 15px; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -39,94 +40,4 @@
             <option value="2">2</option><option value="3">3</option>
             <option value="4">4</option><option value="5">5</option>
             <option value="6">6</option><option value="7">7</option>
-            <option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </td>
-        <td class="subtotal">0</td>
-      </tr>
-      <tr>
-        <td>قهوة</td>
-        <td>15</td>
-        <td>
-          <select onchange="calcTotal(this)">
-            <option value="0">0</option><option value="1">1</option>
-            <option value="2">2</option><option value="3">3</option>
-            <option value="4">4</option><option value="5">5</option>
-            <option value="6">6</option><option value="7">7</option>
-            <option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </td>
-        <td class="subtotal">0</td>
-      </tr>
-      <tr>
-        <td>كولا</td>
-        <td>12</td>
-        <td>
-          <select onchange="calcTotal(this)">
-            <option value="0">0</option><option value="1">1</option>
-            <option value="2">2</option><option value="3">3</option>
-            <option value="4">4</option><option value="5">5</option>
-            <option value="6">6</option><option value="7">7</option>
-            <option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </td>
-        <td class="subtotal">0</td>
-      </tr>
-      <tr>
-        <td>عصير برتقال</td>
-        <td>20</td>
-        <td>
-          <select onchange="calcTotal(this)">
-            <option value="0">0</option><option value="1">1</option>
-            <option value="2">2</option><option value="3">3</option>
-            <option value="4">4</option><option value="5">5</option>
-            <option value="6">6</option><option value="7">7</option>
-            <option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </td>
-        <td class="subtotal">0</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div id="totalBox">المجموع الكلي: 0</div>
-  <button id="doneBtn" onclick="finishOrder()">إتمام الطلب</button>
-  <button id="payBtn" onclick="requestBill()">طلب الحساب</button>
-
-  <div id="message">طلبك قيد التنفيذ ✅</div>
-
-  <script>
-    function calcTotal(select) {
-      let row = select.closest("tr");
-      let price = parseInt(row.cells[1].innerText);
-      let qty = parseInt(select.value);
-      let subtotal = price * qty;
-      row.querySelector(".subtotal").innerText = subtotal;
-      updateTotal();
-    }
-
-    function updateTotal() {
-      let total = 0;
-      document.querySelectorAll(".subtotal").forEach(cell => {
-        total += parseInt(cell.innerText);
-      });
-      document.getElementById("totalBox").innerText = "المجموع الكلي: " + total;
-    }
-
-    function finishOrder() {
-      document.getElementById("menuTable").style.display = "none";
-      document.getElementById("doneBtn").style.display = "none";
-      document.getElementById("payBtn").style.display = "inline-block";
-    }
-
-    function requestBill() {
-      document.getElementById("payBtn").style.display = "none";
-      document.getElementById("message").style.display = "block";
-    }
-  </script>
-</body>
-</html>
+            <option value="8">8<
