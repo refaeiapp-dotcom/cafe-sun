@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>مقهى الشمس - العميل</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; direction: rtl; text-align: center; margin: 20px; }
+    table { width: 90%; margin: auto; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background: #f2f2f2; }
+    button { padding: 10px 15px; margin-top: 15px; font-size: 16px; cursor: pointer; }
+    #totalBox { font-size: 20px; font-weight: bold; margin: 20px; }
+  </style>
+</head>
+<body>
+
+  <h2>مرحباً بك في مقهى الشمس</h2>
+  <h3 id="tableNumber"></h3>
+  <p id="msg">اختر من القائمة:</p>
+
+  <div id="menuDiv">
+    <table>
+      <thead>
+        <tr>
+          <th>الصنف</th>
+          <th>السعر</th>
+          <th>الكمية</th>
+          <th>الإجمالي</th>
+          <th>ملاحظات</th>
+        </tr>
+      </thead>
+      <tbody id="menuBody"></tbody>
+    </table>
+    <div id="totalBox">الإجمالي: 0 جنيه</div>
+    <button onclick="finishOrder()">إتمام الطلب</button>
+  </div>
+
+  <div id="afterOrder" style="display:none;">
+    <div id="finalTotal"></div>
+    <button id="payBtn" onclick="requestBill()" style="background:green; color:white;">طلب الحساب</button>
+  </div>
+
+  <script>
+    // قراءة رقم الطاولة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableId = urlParams.get("table") || "غير محدد";
+    document.getElementById("tableNumber").innerText = "رقم الطاولة: " + tableId;
+
+    // الأصناف (ثابتة لكل الطاولات)
+    const items = [
+      {name:"شاي", price:10},
+      {name:"قهوة", price:15},
+      {name:"كولا", price:20},
+      {name:"سبرايت", price:20},
+      {name:"ميرندا", price:18},
+      {name:"نسكافيه", price:25},
+      {name:"عصير برتقال", price:22},
+      {name:"عصير ليمون", price:22}
+    ];
+
+    const menuBody = document.getElementById("menuBody");
+
+    items.forEach((item, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.price}</td>
+        <td><input type="number" min="0" value="0" style="width:50px" onchange="updateSubtotal(${idx})" id="qty${idx}"></td>
+        <td id="subtotal${idx}">0</td>
+        <td><input type="text" id="note${idx}" placeholder="ملاحظات"></td>
+      `;
+      menuBody.appendChild(tr);
+    });
+
+    function updateSubtotal(i){
+      const qty = parseInt(document.getElementById("qty"+i).value) || 0;
+      const subtotal = qty * items[i].price;
+      document.getElementById("subtotal"+i).innerText = subtotal;
+      calcTotal();
+    }
+
+    function calcTotal(){
+      let total = 0;
+      items.forEach((item,i)=>{
+        total += parseInt(document.getElementById("subtotal"+i).innerText) || 0;
+      });
+      document.getElementById("totalBox").innerText = "الإجمالي: " + total + " جنيه";
+      return total;
+    }
+
+    function finishOrder(){
+      const total = calcTotal();
+      document.getElementById("menuDiv").style.display="none";
+      document.getElementById("afterOrder").style.display="block";
+      document.getElementById("finalTotal").innerText = "إجمالي طلبك: " + total + " جنيه";
+    }
+
+    function requestBill(){
+      document.getElementById("payBtn").innerText="طلبك قيد التنفيذ ✅";
+      document.getElementById("payBtn").disabled = true;
+    }
+  </script>
+</body>
+</html>
