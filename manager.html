@@ -19,9 +19,8 @@
       margin: auto;
     }
     .table-btn {
-      width: 100%;
-      aspect-ratio: 1 / 1;   /* ✅ مربع متساوي */
-      font-size: 20px;       /* ✅ تكبير الخط */
+      padding: 30px;
+      font-size: 18px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
@@ -73,8 +72,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
+    // بيانات فايربيز
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -91,7 +91,7 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // إنشاء الأزرار + متابعة الحالة
+    // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -100,7 +100,7 @@
       btn.addEventListener("click", () => handleClick(btn, i));
       grid.appendChild(btn);
 
-      // متابعة التحديثات من الفايربيز
+      // راقب بيانات كل طاولة
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -133,35 +133,36 @@
       }
     }
 
-    async function openModal(tableNumber) {
+    function openModal(tableNumber) {
       const modal = document.getElementById("modal");
       modal.style.display = "flex";
       document.getElementById("modal-title").innerText = "تفاصيل الطاولة " + tableNumber;
 
       const tableRef = ref(db, "orders/table" + tableNumber);
-      const snapshot = await get(tableRef);  // ✅ قراءة لمرة واحدة فقط
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        let html = "<h3>الحالة: " + (data.status || "غير محدد") + "</h3>";
-        if (data.order) {
-          html += "<ul style='text-align:right'>";
-          data.order.forEach(item => {
-            html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
-          });
-          html += "</ul>";
+      onValue(tableRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          let html = "<h3>الحالة: " + (data.status || "غير محدد") + "</h3>";
+          if (data.order) {
+            html += "<ul style='text-align:right'>";
+            data.order.forEach(item => {
+              html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
+            });
+            html += "</ul>";
+          }
+          html += "<p><b>الإجمالي:</b> " + (data.total || 0) + " جنيه</p>";
+          if (data.notes) html += "<p><b>ملاحظات:</b> " + data.notes + "</p>";
+          document.getElementById("modal-body").innerHTML = html;
+        } else {
+          document.getElementById("modal-body").innerHTML = "<p>لا يوجد طلبات</p>";
         }
-        html += "<p><b>الإجمالي:</b> " + (data.total || 0) + " جنيه</p>";
-        if (data.notes) html += "<p><b>ملاحظات:</b> " + data.notes + "</p>";
-        document.getElementById("modal-body").innerHTML = html;
-      } else {
-        document.getElementById("modal-body").innerHTML = "<p>لا يوجد طلبات</p>";
-      }
+      });
     }
 
     function closeModal() {
       document.getElementById("modal").style.display = "none";
     }
-    window.closeModal = closeModal;
+    window.closeModal = closeModal; // ✅ تفعيل زر "إغلاق"
 
     function sendToKitchen() {
       if (currentTable) {
@@ -169,7 +170,7 @@
         closeModal();
       }
     }
-    window.sendToKitchen = sendToKitchen;
+    window.sendToKitchen = sendToKitchen; // ✅ تفعيل زر "إرسال للبوفيه"
   </script>
 </body>
 </html>
