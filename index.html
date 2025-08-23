@@ -112,7 +112,6 @@
     const tableNumber = urlParams.get("table") || "غير محدد";
     document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
 
-    // زرار إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
@@ -127,24 +126,25 @@
         return;
       }
 
+      // تسجيل الطلب لأول مرة (مع الأصناف والكمية)
       set(ref(db, "orders/table" + tableNumber), {
         status: "قيد التنفيذ",
-        color: "red",   // 🔴 لون أحمر عند إتمام الطلب
+        color: "red",
         table: tableNumber,
-        order,
-        notes,
-        total
+        order: order,
+        notes: notes,
+        total: total
       });
 
       document.getElementById("message").textContent = "✅ طلبك قيد التنفيذ";
       document.getElementById("billBtn").style.display = "block";
     });
 
-    // زرار طلب الحساب (تعديل فقط على الحالة واللون)
     document.getElementById("billBtn").addEventListener("click", () => {
+      // تعديل الحالة واللون فقط بدون مسح الأصناف
       update(ref(db, "orders/table" + tableNumber), {
         status: "طلب حساب",
-        color: "blue"   // 🔵 لون أزرق عند طلب الحساب
+        color: "blue"
       });
       document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
     });
