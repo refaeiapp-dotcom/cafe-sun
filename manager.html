@@ -19,13 +19,18 @@
       margin: auto;
     }
     .table-btn {
-      padding: 30px;
-      font-size: 18px;
+      width: 120px;      /* العرض */
+      height: 120px;     /* الطول */
+      font-size: 22px;   /* تكبير الخط */
       border: none;
-      border-radius: 10px;
+      border-radius: 15px;
       cursor: pointer;
       color: white;
       font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: auto;
     }
     .gray { background-color: gray; }
     .red { background-color: red; }
@@ -49,9 +54,10 @@
     }
     .close-btn, .send-btn {
       background: crimson; color: white;
-      border: none; padding: 8px 16px;
+      border: none; padding: 10px 18px;
       border-radius: 6px; cursor: pointer;
       margin-top: 10px;
+      font-size: 16px;
     }
     .send-btn { background: seagreen; margin-right: 10px; }
   </style>
@@ -74,7 +80,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // بيانات فايربيز
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -125,7 +130,6 @@
 
     function handleClick(btn, tableNumber) {
       currentTable = tableNumber;
-
       if (btn.classList.contains("red") || btn.classList.contains("yellow") || btn.classList.contains("blue")) {
         openModal(tableNumber);
       } else if (btn.classList.contains("green")) {
@@ -162,7 +166,7 @@
     function closeModal() {
       document.getElementById("modal").style.display = "none";
     }
-    window.closeModal = closeModal; // ✅ تفعيل زر "إغلاق"
+    window.closeModal = closeModal;
 
     function sendToKitchen() {
       if (currentTable) {
@@ -170,7 +174,7 @@
         closeModal();
       }
     }
-    window.sendToKitchen = sendToKitchen; // ✅ تفعيل زر "إرسال للبوفيه"
+    window.sendToKitchen = sendToKitchen;
   </script>
 </body>
 </html>
