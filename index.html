@@ -3,161 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طلب الطاولة</title>
+  <title>مقهى الشمس - طلب الطاولة</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 10px;
-      text-align: center;
-      margin: 0;
-    }
-    h1 {
-      color: #333;
-      font-size: 20px;
-    }
-    table {
-      margin: 15px auto;
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 450px;
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th, td {
-      padding: 8px;
-      font-size: 14px;
-    }
-    input[type="number"] {
-      width: 60px;
-      padding: 5px;
-      font-size: 14px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 15px;
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #218838;
-    }
-    #totalBox {
-      margin: 15px auto;
-      font-size: 16px;
-      font-weight: bold;
-      color: #000;
-    }
-    #checkoutBtn {
-      background: #007bff;
-    }
-    #checkoutBtn:hover {
-      background: #0056b3;
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #d35400;
-      display: none;
-    }
+    body { font-family: Arial, sans-serif; margin: 10px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; font-size: 14px; }
+    th { background: #f8f8f8; }
+    button { padding: 10px 15px; margin: 10px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; }
+    #doneBtn { background: #007bff; color: white; }
+    #payBtn { background: #28a745; color: white; display: none; }
+    #totalBox { margin-top: 15px; font-size: 18px; font-weight: bold; }
+    #message { margin-top: 15px; font-size: 18px; color: #007bff; display: none; }
   </style>
 </head>
 <body>
-  <h1 id="welcome">مرحبا بك في مقهى الشمس</h1>
+  <h2>مرحباً بك في مقهى الشمس ☕</h2>
   <h3>اختر من القائمة</h3>
 
-  <table id="menu">
-    <tr>
-      <th>الصنف</th>
-      <th>السعر</th>
-      <th>الكمية</th>
-      <th>الإجمالي</th>
-    </tr>
-    <tr>
-      <td>شاي</td>
-      <td>10</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
-    <tr>
-      <td>قهوة</td>
-      <td>15</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
-    <tr>
-      <td>كولا</td>
-      <td>12</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
-    <tr>
-      <td>سبرايت</td>
-      <td>12</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
-    <tr>
-      <td>عصير برتقال</td>
-      <td>18</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
-    <tr>
-      <td>عصير ليمون</td>
-      <td>18</td>
-      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
-      <td class="subtotal">0</td>
-    </tr>
+  <table id="menuTable">
+    <thead>
+      <tr>
+        <th>الصنف</th>
+        <th>السعر</th>
+        <th>الكمية</th>
+        <th>الإجمالي</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>شاي</td>
+        <td>10</td>
+        <td>
+          <select onchange="calcTotal(this)">
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </td>
+        <td class="subtotal">0</td>
+      </tr>
+      <tr>
+        <td>قهوة</td>
+        <td>15</td>
+        <td>
+          <select onchange="calcTotal(this)">
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </td>
+        <td class="subtotal">0</td>
+      </tr>
+      <tr>
+        <td>كولا</td>
+        <td>12</td>
+        <td>
+          <select onchange="calcTotal(this)">
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </td>
+        <td class="subtotal">0</td>
+      </tr>
+      <tr>
+        <td>عصير برتقال</td>
+        <td>20</td>
+        <td>
+          <select onchange="calcTotal(this)">
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </td>
+        <td class="subtotal">0</td>
+      </tr>
+    </tbody>
   </table>
 
-  <div id="totalBox">الإجمالي: 0</div>
+  <div id="totalBox">المجموع الكلي: 0</div>
+  <button id="doneBtn" onclick="finishOrder()">إتمام الطلب</button>
+  <button id="payBtn" onclick="requestBill()">طلب الحساب</button>
 
-  <button id="finishBtn" onclick="finishOrder()">إتمام الطلب</button>
-  <button id="checkoutBtn" style="display:none;" onclick="requestBill()">طلب الحساب</button>
-
-  <div id="message">طلبك قيد التنفيذ - شكراً لاستخدامك مقهى الشمس ☕</div>
+  <div id="message">طلبك قيد التنفيذ ✅</div>
 
   <script>
-    // قراءة رقم الطاولة من الرابط
-    const params = new URLSearchParams(window.location.search);
-    const tableNum = params.get("table") || "غير محددة";
-    document.getElementById("welcome").innerText = "مرحبا بك في مقهى الشمس - طاولة " + tableNum;
-
-    function calcTotal(input) {
-      let row = input.closest("tr");
+    function calcTotal(select) {
+      let row = select.closest("tr");
       let price = parseInt(row.cells[1].innerText);
-      let qty = parseInt(input.value);
+      let qty = parseInt(select.value);
       let subtotal = price * qty;
       row.querySelector(".subtotal").innerText = subtotal;
       updateTotal();
     }
 
     function updateTotal() {
-      let subs = document.querySelectorAll(".subtotal");
       let total = 0;
-      subs.forEach(s => total += parseInt(s.innerText));
-      document.getElementById("totalBox").innerText = "الإجمالي: " + total;
+      document.querySelectorAll(".subtotal").forEach(cell => {
+        total += parseInt(cell.innerText);
+      });
+      document.getElementById("totalBox").innerText = "المجموع الكلي: " + total;
     }
 
     function finishOrder() {
-      document.getElementById("menu").style.display = "none";
-      document.querySelector("h3").style.display = "none";
-      document.getElementById("finishBtn").style.display = "none";
-      document.getElementById("checkoutBtn").style.display = "inline-block";
+      document.getElementById("menuTable").style.display = "none";
+      document.getElementById("doneBtn").style.display = "none";
+      document.getElementById("payBtn").style.display = "inline-block";
     }
 
     function requestBill() {
-      document.getElementById("checkoutBtn").style.display = "none";
+      document.getElementById("payBtn").style.display = "none";
       document.getElementById("message").style.display = "block";
     }
   </script>
