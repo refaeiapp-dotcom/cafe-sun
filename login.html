@@ -2,30 +2,36 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول - لوحة المدير</title>
+  <title>تسجيل دخول المدير</title>
   <style>
-    body { font-family: Tahoma, Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 50px; }
-    .login-box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    input { padding: 10px; margin: 10px 0; width: 200px; }
-    button { padding: 10px 20px; background: seagreen; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    body { font-family: Tahoma; background: #f1f1f1; text-align: center; padding: 50px; }
+    .login-box {
+      background: white; padding: 20px; border-radius: 10px;
+      width: 300px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
+    button { width: 95%; padding: 10px; background: #4CAF50; border: none; border-radius: 5px; color: white; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="login-box">
-    <h2>🔑 تسجيل الدخول</h2>
-    <input type="password" id="password" placeholder="ادخل كلمة المرور"><br>
-    <button onclick="login()">دخول</button>
+    <h2>🔑 دخول المدير</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم"><br>
+    <input type="password" id="password" placeholder="كلمة المرور"><br>
+    <button onclick="login()">تسجيل دخول</button>
     <p id="msg" style="color:red;"></p>
   </div>
 
   <script>
     function login() {
+      const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
-      const correctPass = "12345"; // ← هنا الباسورد الثابت
-      if (pass === correctPass) {
+
+      if (user === "admin" && pass === "12345") {
+        localStorage.setItem("isManagerLoggedIn", "true");
         window.location.href = "manager.html";
       } else {
-        document.getElementById("msg").innerText = "❌ كلمة المرور غير صحيحة";
+        document.getElementById("msg").textContent = "❌ خطأ في البيانات";
       }
     }
   </script>
