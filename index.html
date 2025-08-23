@@ -1,64 +1,69 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة العميل</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مقهى الشمس - طلب العميل</title>
   <style>
-    body { font-family: Arial, sans-serif; direction: rtl; text-align: center; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    button { margin-top: 15px; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-    #submitOrder { background: #007bff; color: white; }
-    #requestBill { background: #28a745; color: white; }
+    :root { --primary:#007bff; --success:#28a745; --muted:#6c757d; }
+    body{font-family:Arial,system-ui,-apple-system; margin:16px; text-align:center}
+    h1{margin:8px 0 4px}
+    #tableBadge{display:inline-block; background:#f3f4f6; border:1px solid #e5e7eb; padding:6px 10px; border-radius:999px; margin:6px 0; font-size:14px; color:#111827}
+    table{width:100%; border-collapse:collapse; margin:12px 0}
+    th,td{border:1px solid #e5e7eb; padding:10px; font-size:15px}
+    th{background:#f9fafb}
+    select{padding:6px; min-width:64px}
+    textarea{width:100%; min-height:72px; padding:10px; border:1px solid #e5e7eb; border-radius:8px; resize:vertical; box-sizing:border-box}
+    .totals{margin:10px 0; font-weight:bold; font-size:18px}
+    .btn{display:inline-block; padding:10px 16px; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; margin:6px 4px}
+    .btn-primary{background:var(--primary)}
+    .btn-success{background:var(--success)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    #status{margin-top:10px; font-weight:bold}
+    /* تحسين العرض على الموبايل */
+    @media (max-width:480px){
+      th:nth-child(2), td:nth-child(2){width:72px}
+      th:nth-child(3), td:nth-child(3){width:84px}
+      th:nth-child(4), td:nth-child(4){width:84px}
+      td,th{padding:8px}
+    }
   </style>
 </head>
 <body>
-  <h2>مرحباً بك في مقهى الشمس</h2>
-  <p>اختر من القائمة:</p>
 
-  <label>رقم الطاولة: <input type="number" id="tableNumber" min="1" max="50"></label>
+  <h1>مرحباً بك في مقهى الشمس</h1>
+  <div id="tableBadge">رقم الطاولة: <span id="tableNum">—</span></div>
+  <p>اختر من القائمة:</p>
 
   <table>
     <thead>
       <tr>
         <th>الصنف</th>
-        <th>السعر</th>
+        <th>السعر (ج.م)</th>
         <th>الكمية</th>
         <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menu">
-      <tr>
-        <td>شاي</td><td>10</td>
-        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
-        <td class="total">0</td>
-      </tr>
-      <tr>
-        <td>قهوة</td><td>15</td>
-        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
-        <td class="total">0</td>
-      </tr>
-      <tr>
-        <td>عصير برتقال</td><td>20</td>
-        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
-        <td class="total">0</td>
-      </tr>
-    </tbody>
+    <tbody id="menuBody"></tbody>
   </table>
 
-  <p>ملاحظات: <br><textarea id="notes" rows="3" style="width:100%;"></textarea></p>
-  <h3>المجموع الكلي: <span id="grandTotal">0</span> جنيه</h3>
+  <div class="totals">الإجمالي الكلي: <span id="grandTotal">0</span> ج.م</div>
 
-  <button id="submitOrder">إتمام الطلب</button>
-  <button id="requestBill">طلب الحساب</button>
+  <textarea id="notes" placeholder="ملاحظاتك (اختياري)..."></textarea>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+  <div>
+    <button id="confirmBtn" class="btn btn-primary">إتمام الطلب</button>
+    <button id="billBtn" class="btn btn-success" style="display:none;">طلب الحساب</button>
+  </div>
 
+  <div id="status"></div>
+
+  <!-- Firebase (Compat) لسهولة العمل على GitHub Pages بدون Bundlers) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    /*** 1) إعداد فايربيز — استخدم إعدادات مشروعك (هذه إعداداتك التي زودتني بها) ***/
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -68,64 +73,141 @@
       appId: "1:512969391867:web:36a528665b3469871a3a5e",
       measurementId: "G-XR5ZGKEZK8"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    /*** 2) قراءة رقم الطاولة من الرابط ?table=6 ***/
+    const params = new URLSearchParams(location.search);
+    const tableNumber = params.get("table") || "غير محددة";
+    document.getElementById("tableNum").textContent = tableNumber;
 
-    // تحديث المجموع
-    document.querySelectorAll(".qty").forEach(select => {
-      select.addEventListener("change", () => {
-        const row = select.closest("tr");
-        const price = parseInt(row.cells[1].textContent);
-        const qty = parseInt(select.value);
-        row.querySelector(".total").textContent = price * qty;
+    /*** 3) الأصناف (≥10) بالأسعار ***/
+    const menuItems = [
+      { name:"شاي",           price:10 },
+      { name:"قهوة",          price:15 },
+      { name:"كولا",          price:12 },
+      { name:"سبرايت",        price:12 },
+      { name:"ميرندا",        price:12 },
+      { name:"نسكافيه",       price:18 },
+      { name:"كابتشينو",      price:25 },
+      { name:"موكا",          price:30 },
+      { name:"عصير برتقال",   price:20 },
+      { name:"عصير ليمون",    price:20 },
+      { name:"مياه معدنية",   price:6  }
+    ];
 
-        let grand = 0;
-        document.querySelectorAll(".total").forEach(cell => grand += parseInt(cell.textContent));
-        document.getElementById("grandTotal").textContent = grand;
+    /*** 4) رسم الجدول + منطق الحساب ***/
+    const menuBody   = document.getElementById("menuBody");
+    const grandTotalEl = document.getElementById("grandTotal");
+    const statusEl   = document.getElementById("status");
+    let lastOrderDocId = null; // نحتفظ بآخر طلب عشان نحدث حالته عند طلب الحساب
+
+    function renderMenu(){
+      menuBody.innerHTML = "";
+      menuItems.forEach((item, i) => {
+        const tr = document.createElement("tr");
+
+        // قائمة منسدلة كميات 0..10
+        let qtySelect = `<select id="qty-${i}" aria-label="كمية ${item.name}">`;
+        for(let q=0; q<=10; q++) qtySelect += `<option value="${q}">${q}</option>`;
+        qtySelect += `</select>`;
+
+        tr.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.price}</td>
+          <td>${qtySelect}</td>
+          <td id="subtotal-${i}">0</td>
+        `;
+        menuBody.appendChild(tr);
+
+        // تحديث المجاميع عند تغيير الكمية
+        document.getElementById(`qty-${i}`).addEventListener("change", () => recalc());
       });
+    }
+
+    function recalc(){
+      let grand = 0;
+      menuItems.forEach((item, i) => {
+        const qty = parseInt(document.getElementById(`qty-${i}`).value || "0", 10);
+        const sub = qty * item.price;
+        document.getElementById(`subtotal-${i}`).textContent = sub;
+        grand += sub;
+      });
+      grandTotalEl.textContent = grand;
+    }
+
+    renderMenu(); recalc();
+
+    /*** 5) إتمام الطلب — حفظ في Firestore ثم إظهار زر طلب الحساب ***/
+    const confirmBtn = document.getElementById("confirmBtn");
+    const billBtn    = document.getElementById("billBtn");
+    const notesEl    = document.getElementById("notes");
+
+    confirmBtn.addEventListener("click", async () => {
+      // تجميع الطلب
+      const items = [];
+      menuItems.forEach((item, i) => {
+        const qty = parseInt(document.getElementById(`qty-${i}`).value || "0", 10);
+        if(qty > 0){
+          items.push({ name:item.name, price:item.price, qty:qty, subtotal: qty*item.price });
+        }
+      });
+
+      if(items.length === 0){
+        alert("من فضلك اختر صنفاً واحداً على الأقل.");
+        return;
+      }
+
+      const total = parseInt(grandTotalEl.textContent || "0", 10);
+      const notes = notesEl.value.trim();
+
+      // حفظ على فايرستور
+      try {
+        const docRef = await db.collection("orders").add({
+          table: String(tableNumber),
+          items,
+          notes,
+          total,
+          status: "جديد",                    // الحالة الابتدائية
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        lastOrderDocId = docRef.id;
+
+        // واجهة المستخدم
+        statusEl.style.color = "green";
+        statusEl.textContent = `تم إرسال طلبك. المجموع: ${total} ج.م`;
+        confirmBtn.style.display = "none";
+        billBtn.style.display = "inline-block";
+
+        // قفل الحقول بعد الإرسال
+        menuItems.forEach((_, i)=> document.getElementById(`qty-${i}`).disabled = true);
+        notesEl.disabled = true;
+
+      } catch(err){
+        console.error(err);
+        alert("حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.");
+      }
     });
 
-    // زرار إتمام الطلب
-    document.getElementById("submitOrder").addEventListener("click", async () => {
-      const tableNumber = document.getElementById("tableNumber").value;
-      if (!tableNumber) { alert("⚠️ من فضلك أدخل رقم الطاولة"); return; }
-
-      const order = [];
-      document.querySelectorAll("#menu tr").forEach(row => {
-        const item = row.cells[0].textContent;
-        const price = parseInt(row.cells[1].textContent);
-        const qty = parseInt(row.querySelector(".qty").value);
-        if (qty > 0) order.push({ item, price, qty, total: price * qty });
-      });
-
-      if (order.length === 0) { alert("⚠️ اختر صنف واحد على الأقل"); return; }
-
-      await addDoc(collection(db, "orders"), {
-        table: tableNumber,
-        order: order,
-        notes: document.getElementById("notes").value,
-        total: document.getElementById("grandTotal").textContent,
-        status: "جديد",
-        timestamp: new Date()
-      });
-
-      alert("✅ تم إرسال طلبك");
-    });
-
-    // زرار طلب الحساب
-    document.getElementById("requestBill").addEventListener("click", async () => {
-      const tableNumber = document.getElementById("tableNumber").value;
-      if (!tableNumber) { alert("⚠️ من فضلك أدخل رقم الطاولة"); return; }
-
-      const q = query(collection(db, "orders"), where("table", "==", tableNumber), orderBy("timestamp", "desc"), limit(1));
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        await updateDoc(doc.ref, { status: "طلب حساب" });
-        alert("✅ تم إرسال طلب الحساب للمدير");
-      } else {
-        alert("⚠️ لا يوجد طلبات لهذه الطاولة");
+    /*** 6) طلب الحساب — تحديث حالة نفس الوثيقة إلى "طلب حساب" ***/
+    billBtn.addEventListener("click", async () => {
+      if(!lastOrderDocId){
+        // احتياط: لو الصفحة اتعملها ريفريش بعد الإرسال، مش هنلاقي id
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "لا يوجد طلب مسجل في هذه الجلسة. أعد إرسال الطلب أولاً.";
+        return;
+      }
+      try {
+        await db.collection("orders").doc(lastOrderDocId).update({
+          status: "طلب حساب",
+          billRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        statusEl.style.color = "#0ea5e9";
+        statusEl.textContent = "طلبك قيد التنفيذ… تم إشعار الإدارة بطلب الحساب.";
+        billBtn.disabled = true;
+      } catch(err){
+        console.error(err);
+        alert("تعذر إرسال طلب الحساب. حاول مرة أخرى.");
       }
     });
   </script>
