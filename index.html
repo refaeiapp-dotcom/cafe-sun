@@ -1,93 +1,142 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>مقهى الشمس - طاولة 5</title>
+  <title>طلب الطاولة</title>
   <style>
-    body { font-family: Tahoma, sans-serif; text-align: center; direction: rtl; }
-    table { margin: auto; border-collapse: collapse; width: 80%; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background-color: #f2f2f2; }
-    button { margin-top: 10px; padding: 10px 20px; }
-    .hidden { display: none; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    #totalBox {
+      margin: 20px auto;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+    }
+    #checkoutBtn {
+      background: #007bff;
+    }
+    #checkoutBtn:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <h2>مرحباً بك في مقهى الشمس</h2>
-  <h3>رقم الطاولة: 5</h3>
-  <p>اختر من القائمة:</p>
+  <h1 id="welcome">مرحبا بك في مقهى الشمس</h1>
+  <h3>اختر من القائمة</h3>
 
-  <table id="menuTable">
+  <table id="menu">
     <tr>
       <th>الصنف</th>
       <th>السعر</th>
       <th>الكمية</th>
       <th>الإجمالي</th>
-      <th>ملاحظات</th>
     </tr>
     <tr>
       <td>شاي</td>
-      <td class="price">10</td>
-      <td><input type="number" min="0" value="0" class="qty"></td>
+      <td>10</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
       <td class="subtotal">0</td>
-      <td><input type="text" class="note"></td>
     </tr>
     <tr>
       <td>قهوة</td>
-      <td class="price">15</td>
-      <td><input type="number" min="0" value="0" class="qty"></td>
+      <td>15</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
       <td class="subtotal">0</td>
-      <td><input type="text" class="note"></td>
     </tr>
     <tr>
       <td>كولا</td>
-      <td class="price">12</td>
-      <td><input type="number" min="0" value="0" class="qty"></td>
+      <td>12</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
       <td class="subtotal">0</td>
-      <td><input type="text" class="note"></td>
+    </tr>
+    <tr>
+      <td>سبرايت</td>
+      <td>12</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
+      <td class="subtotal">0</td>
+    </tr>
+    <tr>
+      <td>عصير برتقال</td>
+      <td>18</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
+      <td class="subtotal">0</td>
+    </tr>
+    <tr>
+      <td>عصير ليمون</td>
+      <td>18</td>
+      <td><input type="number" min="0" value="0" onchange="calcTotal(this)"></td>
+      <td class="subtotal">0</td>
     </tr>
   </table>
 
-  <h3>المجموع الكلي: <span id="total">0</span> جنيه</h3>
+  <div id="totalBox">الإجمالي: 0</div>
 
-  <button id="submitBtn">إتمام الطلب</button>
-  <button id="payBtn" class="hidden">طلب الحساب</button>
+  <button onclick="finishOrder()">إتمام الطلب</button>
+  <button id="checkoutBtn" style="display:none;" onclick="requestBill()">طلب الحساب</button>
 
   <script>
-    const qtyInputs = document.querySelectorAll(".qty");
-    const totalEl = document.getElementById("total");
+    // قراءة رقم الطاولة من الرابط
+    const params = new URLSearchParams(window.location.search);
+    const tableNum = params.get("table") || "غير محددة";
+    document.getElementById("welcome").innerText = "مرحبا بك في مقهى الشمس - طاولة " + tableNum;
 
-    qtyInputs.forEach(input => {
-      input.addEventListener("input", updateTotals);
-    });
-
-    function updateTotals() {
-      let total = 0;
-      document.querySelectorAll("#menuTable tr").forEach(row => {
-        const price = row.querySelector(".price");
-        const qty = row.querySelector(".qty");
-        const subtotal = row.querySelector(".subtotal");
-        if (price && qty && subtotal) {
-          let sub = parseInt(price.textContent) * parseInt(qty.value);
-          subtotal.textContent = sub;
-          total += sub;
-        }
-      });
-      totalEl.textContent = total;
+    function calcTotal(input) {
+      let row = input.closest("tr");
+      let price = parseInt(row.cells[1].innerText);
+      let qty = parseInt(input.value);
+      let subtotal = price * qty;
+      row.querySelector(".subtotal").innerText = subtotal;
+      updateTotal();
     }
 
-    const submitBtn = document.getElementById("submitBtn");
-    const payBtn = document.getElementById("payBtn");
+    function updateTotal() {
+      let subs = document.querySelectorAll(".subtotal");
+      let total = 0;
+      subs.forEach(s => total += parseInt(s.innerText));
+      document.getElementById("totalBox").innerText = "الإجمالي: " + total;
+    }
 
-    submitBtn.addEventListener("click", () => {
-      document.getElementById("menuTable").classList.add("hidden");
-      submitBtn.classList.add("hidden");
-      payBtn.classList.remove("hidden");
-    });
+    function finishOrder() {
+      document.getElementById("menu").style.display = "none";
+      document.querySelector("h3").style.display = "none";
+      document.querySelector("button").style.display = "none";
+      document.getElementById("checkoutBtn").style.display = "inline-block";
+    }
 
-    payBtn.addEventListener("click", () => {
-      alert("طلبك قيد التنفيذ، شكراً!");
-    });
+    function requestBill() {
+      alert("طلبك قيد التنفيذ - طاولة " + tableNum);
+    }
   </script>
 </body>
 </html>
