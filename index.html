@@ -112,6 +112,7 @@
     const tableNumber = urlParams.get("table") || "غير محدد";
     document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
 
+    // زرار إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
@@ -128,6 +129,7 @@
 
       set(ref(db, "orders/table" + tableNumber), {
         status: "قيد التنفيذ",
+        color: "red",   // 🔴 لون أحمر عند إتمام الطلب
         table: tableNumber,
         order,
         notes,
@@ -138,8 +140,12 @@
       document.getElementById("billBtn").style.display = "block";
     });
 
+    // زرار طلب الحساب
     document.getElementById("billBtn").addEventListener("click", () => {
-      set(ref(db, "orders/table" + tableNumber + "/status"), "طلب حساب");
+      set(ref(db, "orders/table" + tableNumber), {
+        status: "طلب حساب",
+        color: "blue",   // 🔵 لون أزرق عند طلب الحساب
+      });
       document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
     });
   </script>
