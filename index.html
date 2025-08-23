@@ -5,23 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة العميل</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; }
     h2 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background: #007bff; color: white; }
-    select, input[type="number"] { padding: 5px; }
-    textarea { width: 100%; height: 60px; margin-top: 10px; }
-    button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
-    #submitOrder { background: #28a745; color: white; display: block; margin: 10px auto; }
-    #requestBill { background: #007bff; color: white; display: none; margin: 10px auto; }
-    #statusMsg { text-align: center; margin-top: 10px; font-weight: bold; }
-    #totalPrice { font-weight: bold; font-size: 18px; margin-top: 10px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+    th { background: #eee; }
+    select, input[type="text"] { width: 100%; padding: 4px; }
+    textarea { width: 100%; margin-top: 8px; padding: 6px; }
+    button { margin: 5px 0; padding: 10px; width: 100%; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+    #orderBtn { background: #4CAF50; color: white; }
+    #billBtn { background: #2196F3; color: white; display: none; }
+    #message { margin-top: 10px; text-align: center; font-weight: bold; }
   </style>
 </head>
 <body>
-
-  <h2>قائمة الطلبات - طاولة <span id="tableNumber"></span></h2>
+  <h2>قائمة الطعام</h2>
 
   <table>
     <thead>
@@ -32,130 +30,123 @@
         <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menuBody">
-      <!-- الأصناف هتتولد هنا -->
+    <tbody id="menu">
+      <!-- الأصناف -->
     </tbody>
   </table>
 
-  <div id="totalPrice">الإجمالي: 0 ج.م</div>
+  <h3>ملاحظات:</h3>
+  <textarea id="notes" placeholder="اكتب ملاحظاتك هنا..."></textarea>
 
-  <textarea id="notes" placeholder="ملاحظات"></textarea>
-  
-  <button id="submitOrder">إتمام الطلب</button>
-  <button id="requestBill">طلب الحساب</button>
+  <h3>الإجمالي الكلي: <span id="totalPrice">0</span> جنيه</h3>
 
-  <div id="statusMsg"></div>
+  <button id="orderBtn">إتمام الطلب</button>
+  <button id="billBtn">طلب الحساب</button>
+  <div id="message"></div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
+    // Config (من مشروعك)
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
-      databaseURL: "https://my-restaurant-aba99-default-rtdb.firebaseio.com",
       projectId: "my-restaurant-aba99",
       storageBucket: "my-restaurant-aba99.appspot.com",
       messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e"
+      appId: "1:512969391867:web:36a528665b3469871a3a5e",
+      databaseURL: "https://my-restaurant-aba99-default-rtdb.firebaseio.com/"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // أصناف تجريبية
-    const menuItems = [
-      { name: "قهوة تركي", price: 20 },
-      { name: "قهوة إسبريسو", price: 25 },
-      { name: "كابتشينو", price: 30 },
-      { name: "شاي", price: 15 },
-      { name: "عصير برتقال", price: 25 },
-      { name: "عصير مانجو", price: 28 },
-      { name: "مياه معدنية", price: 10 },
-      { name: "بيبسي", price: 18 },
-      { name: "ساندوتش جبنة", price: 35 },
-      { name: "بيتزا صغيرة", price: 60 }
+    // قائمة الأصناف
+    const items = [
+      { name: "شاي", price: 10 },
+      { name: "قهوة", price: 15 },
+      { name: "عصير برتقال", price: 20 },
+      { name: "عصير مانجو", price: 25 },
+      { name: "بيبسي", price: 12 },
+      { name: "مياه معدنية", price: 8 },
+      { name: "كيك", price: 30 },
+      { name: "ساندوتش جبنة", price: 18 },
+      { name: "بيتزا", price: 50 },
+      { name: "برجر", price: 45 }
     ];
 
-    const menuBody = document.getElementById("menuBody");
+    const menu = document.getElementById("menu");
     const totalPriceEl = document.getElementById("totalPrice");
 
-    // الحصول على رقم الطاولة من الرابط ?table=5
-    const urlParams = new URLSearchParams(window.location.search);
-    const tableNumber = urlParams.get("table") || "غير معروف";
-    document.getElementById("tableNumber").textContent = tableNumber;
-
     // إنشاء الجدول
-    menuItems.forEach((item, index) => {
-      const row = document.createElement("tr");
+    items.forEach((item, index) => {
+      const tr = document.createElement("tr");
 
-      row.innerHTML = `
+      tr.innerHTML = `
         <td>${item.name}</td>
-        <td>${item.price} ج.م</td>
+        <td>${item.price}</td>
         <td>
           <select id="qty-${index}">
-            <option value="0">0</option>
-            ${[...Array(11).keys()].slice(1).map(n => `<option value="${n}">${n}</option>`).join("")}
+            ${Array.from({length: 11}, (_,i) => `<option value="${i}">${i}</option>`).join("")}
           </select>
         </td>
-        <td id="total-${index}">0 ج.م</td>
+        <td id="subtotal-${index}">0</td>
       `;
+      menu.appendChild(tr);
 
-      menuBody.appendChild(row);
-
-      // تحديث الإجمالي لكل صنف
-      document.getElementById(`qty-${index}`).addEventListener("change", () => {
-        const qty = parseInt(document.getElementById(`qty-${index}`).value);
-        const subtotal = qty * item.price;
-        document.getElementById(`total-${index}`).textContent = subtotal + " ج.م";
-        updateTotal();
-      });
+      // تحديث الإجمالي
+      document.getElementById(`qty-${index}`).addEventListener("change", updateTotal);
     });
 
-    // تحديث الإجمالي الكلي
     function updateTotal() {
       let total = 0;
-      menuItems.forEach((item, index) => {
+      items.forEach((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
-        total += qty * item.price;
+        const subtotal = qty * item.price;
+        document.getElementById(`subtotal-${index}`).textContent = subtotal;
+        total += subtotal;
       });
-      totalPriceEl.textContent = "الإجمالي: " + total + " ج.م";
+      totalPriceEl.textContent = total;
     }
 
-    // إرسال الطلب
-    document.getElementById("submitOrder").addEventListener("click", () => {
-      let order = [];
-      let total = 0;
+    // جلب رقم الطاولة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNumber = urlParams.get("table") || "غير محدد";
 
-      menuItems.forEach((item, index) => {
+    // زرار إتمام الطلب
+    document.getElementById("orderBtn").addEventListener("click", () => {
+      const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
-        if (qty > 0) {
-          order.push({ name: item.name, price: item.price, qty, subtotal: qty * item.price });
-          total += qty * item.price;
-        }
-      });
+        return qty > 0 ? { name: item.name, price: item.price, qty } : null;
+      }).filter(x => x);
 
       const notes = document.getElementById("notes").value;
+      const total = totalPriceEl.textContent;
 
-      const ordersRef = ref(db, "orders");
-      push(ordersRef, {
-        table: tableNumber,
+      if (order.length === 0) {
+        document.getElementById("message").textContent = "الرجاء اختيار صنف واحد على الأقل";
+        return;
+      }
+
+      set(ref(db, "orders/table" + tableNumber), {
+        status: "قيد التنفيذ",
         order,
         notes,
-        total,
-        status: "تم الإرسال"
+        total
       });
 
-      document.getElementById("statusMsg").textContent = "✅ تم إرسال طلبك للبوفيه";
-      document.getElementById("requestBill").style.display = "block";
+      document.getElementById("message").textContent = "✅ طلبك قيد التنفيذ";
+      document.getElementById("billBtn").style.display = "block";
     });
 
-    // طلب الحساب
-    document.getElementById("requestBill").addEventListener("click", () => {
-      document.getElementById("statusMsg").textContent = "💳 طلبك قيد التنفيذ، سيتم تجهيز الحساب.";
+    // زرار طلب الحساب
+    document.getElementById("billBtn").addEventListener("click", () => {
+      set(ref(db, "orders/table" + tableNumber + "/status"), "طلب حساب");
+      document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
     });
-
   </script>
 </body>
 </html>
