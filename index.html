@@ -47,7 +47,7 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
@@ -140,11 +140,11 @@
       document.getElementById("billBtn").style.display = "block";
     });
 
-    // زرار طلب الحساب
+    // زرار طلب الحساب (تعديل فقط على الحالة واللون)
     document.getElementById("billBtn").addEventListener("click", () => {
-      set(ref(db, "orders/table" + tableNumber), {
+      update(ref(db, "orders/table" + tableNumber), {
         status: "طلب حساب",
-        color: "blue",   // 🔵 لون أزرق عند طلب الحساب
+        color: "blue"   // 🔵 لون أزرق عند طلب الحساب
       });
       document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
     });
