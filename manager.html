@@ -4,20 +4,63 @@
   <meta charset="UTF-8">
   <title>لوحة المدير</title>
   <style>
-    body { font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: center; background-color: #f9f9f9; }
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      direction: rtl;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
     h1 { color: #b5651d; margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 90%; margin: auto; }
-    .table-btn { padding: 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; }
-    .gray { background-color: gray; } .red { background-color: red; } .yellow { background-color: goldenrod; } .blue { background-color: royalblue; } .green { background-color: green; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
-    .modal-content { background: #fff; padding: 20px; border-radius: 10px; width: 350px; text-align: center; }
-    .close-btn, .send-btn { background: crimson; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      width: 90%;
+      margin: auto;
+    }
+    .table-btn {
+      padding: 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+    .gray { background-color: gray; }
+    .red { background-color: red; }
+    .yellow { background-color: goldenrod; }
+    .blue { background-color: royalblue; }
+    .green { background-color: green; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      text-align: center;
+    }
+    .close-btn, .send-btn {
+      background: crimson; color: white;
+      border: none; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer;
+      margin-top: 10px;
+    }
     .send-btn { background: seagreen; margin-right: 10px; }
   </style>
 </head>
 <body>
+
   <h1>لوحة المدير - مقهى الشمس ☕</h1>
   <div class="grid" id="tables-grid"></div>
+
   <div id="modal" class="modal">
     <div class="modal-content">
       <h2 id="modal-title">تفاصيل الطاولة</h2>
@@ -31,6 +74,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
+    // بيانات فايربيز
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -47,6 +91,7 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
+    // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -55,6 +100,7 @@
       btn.addEventListener("click", () => handleClick(btn, i));
       grid.appendChild(btn);
 
+      // راقب بيانات كل طاولة
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -67,7 +113,7 @@
     }
 
     function updateButtonColor(btn, status) {
-      btn.className = "table-btn";
+      btn.className = "table-btn"; // reset
       switch(status) {
         case "قيد التنفيذ": btn.classList.add("red"); break;
         case "قيد التحضير": btn.classList.add("yellow"); break;
@@ -79,10 +125,11 @@
 
     function handleClick(btn, tableNumber) {
       currentTable = tableNumber;
+
       if (btn.classList.contains("red") || btn.classList.contains("yellow") || btn.classList.contains("blue")) {
         openModal(tableNumber);
       } else if (btn.classList.contains("green")) {
-        set(ref(db, "orders/table" + tableNumber + "/status"), "");
+        set(ref(db, "orders/table" + tableNumber + "/status"), ""); // إرجاعها رمادي
       }
     }
 
@@ -112,13 +159,18 @@
       });
     }
 
-    function closeModal() { document.getElementById("modal").style.display = "none"; }
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+    window.closeModal = closeModal; // ✅ تفعيل زر "إغلاق"
+
     function sendToKitchen() {
       if (currentTable) {
         set(ref(db, "orders/table" + currentTable + "/status"), "قيد التحضير");
         closeModal();
       }
     }
+    window.sendToKitchen = sendToKitchen; // ✅ تفعيل زر "إرسال للبوفيه"
   </script>
 </body>
 </html>
