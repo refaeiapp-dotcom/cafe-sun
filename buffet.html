@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة البوفيه</title>
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0; padding: 20px;
+    }
+    h1 { text-align: center; color: #b5651d; margin-bottom: 20px; }
+    .order-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .order-card h3 { margin-top: 0; color: #333; }
+    ul { text-align: right; }
+    .status-btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      color: white;
+      margin-top: 10px;
+    }
+    .yellow { background: goldenrod; }
+    .green { background: seagreen; }
+  </style>
+</head>
+<body>
+
+  <h1>لوحة البوفيه 🍽️</h1>
+  <div id="orders"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    // إعدادات فايربيز
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
+      authDomain: "my-restaurant-aba99.firebaseapp.com",
+      projectId: "my-restaurant-aba99",
+      storageBucket: "my-restaurant-aba99.appspot.com",
+      messagingSenderId: "512969391867",
+      appId: "1:512969391867:web:36a528665b3469871a3a5e",
+      databaseURL: "https://my-restaurant-aba99-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const ordersDiv = document.getElementById("orders");
+
+    // عرض الطلبات من الفاير بيز
+    const ordersRef = ref(db, "orders");
+    onValue(ordersRef, (snapshot) => {
+      ordersDiv.innerHTML = "";
+      snapshot.forEach(tableSnap => {
+        const tableNumber = tableSnap.key.replace("table", "");
+        const data = tableSnap.val();
+
+        if (!data || !data.order) return;
+
+        const card = document.createElement("div");
+        card.className = "order-card";
+
+        let html = `<h3>طاولة ${tableNumber}</h3>`;
+        html += `<p><b>الحالة:</b> ${data.status || "غير محدد"}</p>`;
+        html += "<ul>";
+        data.order.forEach(item => {
+          html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
+        });
+        html += "</ul>";
+        html += `<p><b>الإجمالي:</b> ${data.total} جنيه</p>`;
+        if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
+
+        card.innerHTML = html;
+
+        // زر الحالة
+        const btn = document.createElement("button");
+        btn.className = "status-btn " + (data.status === "قيد التحضير" ? "yellow" : data.status === "منتهي" ? "green" : "yellow");
+        btn.innerText = (data.status === "منتهي") ? "تم التجهيز" : "قيد التجهيز";
+
+        btn.onclick = () => {
+          set(ref(db, "orders/table" + tableNumber + "/status"), "منتهي");
+        };
+
+        card.appendChild(btn);
+        ordersDiv.appendChild(card);
+      });
+    });
+  </script>
+</body>
+</html>
