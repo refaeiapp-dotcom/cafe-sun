@@ -19,23 +19,14 @@
       margin: auto;
     }
     .table-btn {
-      width: 150px;      /* العرض */
-      height: 150px;     /* الطول */
-      font-size: 22px;   /* حجم الخط */
+      width: 120px;
+      height: 120px;
+      font-size: 20px;
       border: none;
-      border-radius: 50%; /* دائرة كاملة */
+      border-radius: 50%; /* ✅ دائرية */
       cursor: pointer;
       color: white;
       font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: auto;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
-    }
-    .table-btn:hover {
-      transform: scale(1.05); /* تكبير بسيط عند المرور */
     }
     .gray { background-color: gray; }
     .red { background-color: red; }
@@ -59,18 +50,40 @@
     }
     .close-btn, .send-btn {
       background: crimson; color: white;
-      border: none; padding: 10px 18px;
+      border: none; padding: 8px 16px;
       border-radius: 6px; cursor: pointer;
       margin-top: 10px;
-      font-size: 16px;
     }
     .send-btn { background: seagreen; margin-right: 10px; }
+    .footer-buttons {
+      margin-top: 25px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    .footer-buttons button {
+      padding: 12px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+    }
+    .clear-btn { background: darkred; }
+    .buffet-btn { background: darkblue; }
   </style>
 </head>
 <body>
 
   <h1>لوحة المدير - مقهى الشمس ☕</h1>
+
   <div class="grid" id="tables-grid"></div>
+
+  <!-- أزرار التحكم أسفل الصفحة -->
+  <div class="footer-buttons">
+    <button class="clear-btn" onclick="clearAllOrders()">🗑️ تصفير كل الطلبات</button>
+    <button class="buffet-btn" onclick="goToBuffet()">🍽️ لوحة البوفيه</button>
+  </div>
 
   <div id="modal" class="modal">
     <div class="modal-content">
@@ -83,8 +96,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
+    // بيانات فايربيز
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -101,6 +115,7 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
+    // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -109,6 +124,7 @@
       btn.addEventListener("click", () => handleClick(btn, i));
       grid.appendChild(btn);
 
+      // راقب بيانات كل طاولة
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -121,7 +137,7 @@
     }
 
     function updateButtonColor(btn, status) {
-      btn.className = "table-btn"; 
+      btn.className = "table-btn"; // reset
       switch(status) {
         case "قيد التنفيذ": btn.classList.add("red"); break;
         case "قيد التحضير": btn.classList.add("yellow"); break;
@@ -133,9 +149,12 @@
 
     function handleClick(btn, tableNumber) {
       currentTable = tableNumber;
-      if (btn.classList.contains("red") || btn.classList.contains("yellow") || btn.classList.contains("blue")) {
+
+      if (btn.classList.contains("red") || btn.classList.contains("yellow")) {
         openModal(tableNumber);
-      } else if (btn.classList.contains("green")) {
+      } 
+      else if (btn.classList.contains("blue") || btn.classList.contains("green")) {
+        // أزرق أو أخضر → يرجع رمادي
         set(ref(db, "orders/table" + tableNumber + "/status"), "");
       }
     }
@@ -178,6 +197,26 @@
       }
     }
     window.sendToKitchen = sendToKitchen;
+
+    // زرار تصفير الطلبات
+    function clearAllOrders() {
+      if (confirm("هل أنت متأكد من مسح كل الطلبات؟")) {
+        remove(ref(db, "orders"))
+          .then(() => {
+            alert("✅ تم مسح جميع الطلبات وإعادة الطاولات للوضع الافتراضي");
+          })
+          .catch((error) => {
+            console.error("❌ خطأ أثناء المسح:", error);
+          });
+      }
+    }
+    window.clearAllOrders = clearAllOrders;
+
+    // زرار لوحة البوفيه
+    function goToBuffet() {
+      window.location.href = "buffet.html"; // ✅ غير الرابط حسب اسم صفحة البوفيه
+    }
+    window.goToBuffet = goToBuffet;
   </script>
 </body>
 </html>
