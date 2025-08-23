@@ -1,160 +1,145 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طلب جديد</title>
+  <title>لوحة العميل</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    .container {
-      background: #fff;
-      padding: 20px;
-      margin-top: 40px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 600px;
-    }
-    h2 {
+      direction: rtl;
       text-align: center;
-      margin-bottom: 20px;
-    }
-    .menu-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       padding: 10px;
-      border-bottom: 1px solid #eee;
     }
-    .menu-item button {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
+    h1 {
+      color: #333;
     }
-    .menu-item button:hover {
-      background: #218838;
-    }
-    textarea {
+    table {
       width: 100%;
-      height: 80px;
+      border-collapse: collapse;
       margin-top: 10px;
-      padding: 8px;
-      border-radius: 5px;
+    }
+    th, td {
       border: 1px solid #ccc;
+      padding: 8px;
     }
-    .submit-btn {
-      background: #28a745;
-      color: white;
+    th {
+      background: #f0f0f0;
+    }
+    input[type="number"] {
+      width: 60px;
+    }
+    .total-box {
+      margin: 15px 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    button {
+      padding: 10px 15px;
+      margin-top: 10px;
       border: none;
-      padding: 12px;
-      width: 100%;
-      border-radius: 8px;
+      border-radius: 5px;
       cursor: pointer;
-      margin-top: 15px;
-      font-size: 16px;
     }
-    .submit-btn:hover {
-      background: #218838;
-    }
+    #confirmBtn { background: #28a745; color: white; }
+    #billBtn { background: #007bff; color: white; display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>طلب جديد</h2>
-    <div id="menu"></div>
 
-    <label for="notes">ملاحظات الطلب:</label>
-    <textarea id="notes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+  <h1>مرحباً بك في مقهى الشمس</h1>
+  <h2 id="tableNumber"></h2>
+  <p>اختر من القائمة:</p>
 
-    <button class="submit-btn" onclick="submitOrder()">إتمام الطلب</button>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>الصنف</th>
+        <th>السعر</th>
+        <th>الكمية</th>
+        <th>الإجمالي</th>
+      </tr>
+    </thead>
+    <tbody id="menuBody"></tbody>
+  </table>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <div class="total-box">الإجمالي الكلي: <span id="finalTotal">0</span> جنيه</div>
+
+  <textarea id="notes" placeholder="ملاحظاتك هنا..." style="width:100%;height:60px;"></textarea>
+
+  <br>
+  <button id="confirmBtn">إتمام الطلب</button>
+  <button id="billBtn">طلب الحساب</button>
+
+  <p id="statusMessage" style="margin-top:15px;font-weight:bold;"></p>
 
   <script>
-    // 🔥 إعداد Firebase - استبدل البيانات بمشروعك
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    // ✅ قائمة الأصناف (مباشرة بدون JSON خارجي)
+    const menuItems = [
+      { name: "شاي", price: 5 },
+      { name: "قهوة", price: 7 },
+      { name: "كولا", price: 10 },
+      { name: "سبرايت", price: 10 },
+      { name: "ميرندا", price: 10 },
+      { name: "نسكافيه", price: 12 },
+      { name: "عصير برتقال", price: 15 },
+      { name: "عصير ليمون", price: 15 }
+    ];
 
-    // تفعيل Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const menuBody = document.getElementById("menuBody");
+    const finalTotal = document.getElementById("finalTotal");
+    const confirmBtn = document.getElementById("confirmBtn");
+    const billBtn = document.getElementById("billBtn");
+    const statusMessage = document.getElementById("statusMessage");
 
-    // قراءة رقم الطاولة من الرابط
+    // 📌 استخراج رقم الطاولة من الرابط
     const urlParams = new URLSearchParams(window.location.search);
-    const tableNumber = urlParams.get('table') || "غير محدد";
-    document.title = "طلب جديد - طاولة " + tableNumber;
-    document.querySelector("h2").innerText = "طلب جديد - طاولة " + tableNumber;
+    const table = urlParams.get("table") || "غير محددة";
+    document.getElementById("tableNumber").innerText = "رقم الطاولة: " + table;
 
-    // تحميل المنيو من ملف JSON
-    fetch('menu.json')
-      .then(response => response.json())
-      .then(data => {
-        const menuDiv = document.getElementById('menu');
-        data.forEach(item => {
-          const div = document.createElement('div');
-          div.className = "menu-item";
-          div.innerHTML = `
-            <span><strong>${item.name}</strong> - ${item.price} جنيه</span>
-            <button onclick="addToOrder('${item.name}', ${item.price})">إضافة</button>
-          `;
-          menuDiv.appendChild(div);
-        });
-      })
-      .catch(error => console.error('خطأ في تحميل المنيو:', error));
+    // 📌 إنشاء الجدول
+    menuItems.forEach((item, index) => {
+      const row = document.createElement("tr");
 
-    // مصفوفة الطلب
-    let order = [];
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.price}</td>
+        <td>
+          <input type="number" min="0" value="0" id="qty-${index}">
+        </td>
+        <td id="total-${index}">0</td>
+      `;
 
-    function addToOrder(name, price) {
-      order.push({name, price});
-      alert(`تمت إضافة ${name} للطلب`);
-    }
+      menuBody.appendChild(row);
 
-    // إرسال الطلب للفايرستور
-    function submitOrder() {
-      const notes = document.getElementById('notes').value;
-      if(order.length === 0) {
-        alert("من فضلك اختر صنف واحد على الأقل");
-        return;
-      }
+      // تحديث الإجمالي
+      document.getElementById(`qty-${index}`).addEventListener("input", () => updateTotals());
+    });
 
-      db.collection("orders").add({
-        table: tableNumber,
-        order: order,
-        notes: notes,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        alert("✅ تم إرسال طلبك، طاولة " + tableNumber);
-        order = [];
-        document.getElementById('notes').value = "";
-      })
-      .catch((error) => {
-        console.error("خطأ في إرسال الطلب:", error);
-        alert("❌ حدث خطأ أثناء إرسال الطلب");
+    function updateTotals() {
+      let grandTotal = 0;
+      menuItems.forEach((item, index) => {
+        const qty = parseInt(document.getElementById(`qty-${index}`).value) || 0;
+        const subtotal = qty * item.price;
+        document.getElementById(`total-${index}`).innerText = subtotal;
+        grandTotal += subtotal;
       });
+      finalTotal.innerText = grandTotal;
     }
+
+    // ✅ إتمام الطلب
+    confirmBtn.addEventListener("click", () => {
+      confirmBtn.style.display = "none";
+      billBtn.style.display = "inline-block";
+      statusMessage.innerText = "تم تسجيل طلبك.";
+      statusMessage.style.color = "green";
+    });
+
+    // ✅ طلب الحساب
+    billBtn.addEventListener("click", () => {
+      statusMessage.innerText = "طلبك قيد التنفيذ...";
+      statusMessage.style.color = "blue";
+    });
   </script>
 </body>
 </html>
