@@ -81,7 +81,25 @@
     <button class="submit-btn" onclick="submitOrder()">إتمام الطلب</button>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <script>
+    // 🔥 إعداد Firebase - استبدل البيانات بمشروعك
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // تفعيل Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     // قراءة رقم الطاولة من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const tableNumber = urlParams.get('table') || "غير محدد";
@@ -113,21 +131,29 @@
       alert(`تمت إضافة ${name} للطلب`);
     }
 
-    // إرسال الطلب
+    // إرسال الطلب للفايرستور
     function submitOrder() {
       const notes = document.getElementById('notes').value;
       if(order.length === 0) {
         alert("من فضلك اختر صنف واحد على الأقل");
         return;
       }
-      // هنا ممكن نربط مع Firebase لاحقاً
-      console.log("رقم الطاولة:", tableNumber);
-      console.log("الطلب:", order);
-      console.log("الملاحظات:", notes);
 
-      alert("✅ تم إرسال طلبك، طاولة " + tableNumber);
-      order = []; // تفريغ الطلب بعد الإرسال
-      document.getElementById('notes').value = "";
+      db.collection("orders").add({
+        table: tableNumber,
+        order: order,
+        notes: notes,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert("✅ تم إرسال طلبك، طاولة " + tableNumber);
+        order = [];
+        document.getElementById('notes').value = "";
+      })
+      .catch((error) => {
+        console.error("خطأ في إرسال الطلب:", error);
+        alert("❌ حدث خطأ أثناء إرسال الطلب");
+      });
     }
   </script>
 </body>
