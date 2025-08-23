@@ -14,16 +14,16 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
+      gap: 20px;
       width: 90%;
       margin: auto;
     }
     .table-btn {
-      width: 120px;      /* العرض */
-      height: 120px;     /* الطول */
-      font-size: 22px;   /* تكبير الخط */
+      width: 150px;      /* العرض */
+      height: 150px;     /* الطول */
+      font-size: 22px;   /* حجم الخط */
       border: none;
-      border-radius: 15px;
+      border-radius: 50%; /* دائرة كاملة */
       cursor: pointer;
       color: white;
       font-weight: bold;
@@ -31,6 +31,11 @@
       justify-content: center;
       align-items: center;
       margin: auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    .table-btn:hover {
+      transform: scale(1.05); /* تكبير بسيط عند المرور */
     }
     .gray { background-color: gray; }
     .red { background-color: red; }
@@ -96,7 +101,6 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -105,7 +109,6 @@
       btn.addEventListener("click", () => handleClick(btn, i));
       grid.appendChild(btn);
 
-      // راقب بيانات كل طاولة
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -118,7 +121,7 @@
     }
 
     function updateButtonColor(btn, status) {
-      btn.className = "table-btn"; // reset
+      btn.className = "table-btn"; 
       switch(status) {
         case "قيد التنفيذ": btn.classList.add("red"); break;
         case "قيد التحضير": btn.classList.add("yellow"); break;
@@ -133,7 +136,7 @@
       if (btn.classList.contains("red") || btn.classList.contains("yellow") || btn.classList.contains("blue")) {
         openModal(tableNumber);
       } else if (btn.classList.contains("green")) {
-        set(ref(db, "orders/table" + tableNumber + "/status"), ""); // إرجاعها رمادي
+        set(ref(db, "orders/table" + tableNumber + "/status"), "");
       }
     }
 
