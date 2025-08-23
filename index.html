@@ -3,59 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مقهى الشمس - طلبك</title>
+  <title>لوحة العميل</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      text-align: center;
-      direction: rtl;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-    th {
-      background: #f4f4f4;
-    }
-    select {
-      width: 60px;
-      padding: 4px;
-      text-align: center;
-    }
-    textarea {
-      width: 95%;
-      margin-top: 15px;
-      padding: 8px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 15px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #totalBox {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; direction: rtl; text-align: center; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    button { margin-top: 15px; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    #submitOrder { background: #007bff; color: white; }
+    #requestBill { background: #28a745; color: white; }
   </style>
 </head>
 <body>
-
   <h2>مرحباً بك في مقهى الشمس</h2>
-  <h3 id="tableTitle">طاولتك: </h3>
+  <p>اختر من القائمة:</p>
+
+  <label>رقم الطاولة: <input type="number" id="tableNumber" min="1" max="50"></label>
 
   <table>
     <thead>
@@ -66,71 +29,36 @@
         <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menuBody">
+    <tbody id="menu">
       <tr>
-        <td>شاي</td>
-        <td>10</td>
-        <td>
-          <select class="qty">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </td>
-        <td class="rowTotal">0</td>
+        <td>شاي</td><td>10</td>
+        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
+        <td class="total">0</td>
       </tr>
       <tr>
-        <td>قهوة</td>
-        <td>15</td>
-        <td>
-          <select class="qty">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </td>
-        <td class="rowTotal">0</td>
+        <td>قهوة</td><td>15</td>
+        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
+        <td class="total">0</td>
       </tr>
       <tr>
-        <td>عصير برتقال</td>
-        <td>20</td>
-        <td>
-          <select class="qty">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </td>
-        <td class="rowTotal">0</td>
+        <td>عصير برتقال</td><td>20</td>
+        <td><select class="qty"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></td>
+        <td class="total">0</td>
       </tr>
     </tbody>
   </table>
 
-  <div id="totalBox">الإجمالي: 0 ج.م</div>
-
-  <textarea id="notes" placeholder="أدخل ملاحظاتك هنا..."></textarea><br>
+  <p>ملاحظات: <br><textarea id="notes" rows="3" style="width:100%;"></textarea></p>
+  <h3>المجموع الكلي: <span id="grandTotal">0</span> جنيه</h3>
 
   <button id="submitOrder">إتمام الطلب</button>
+  <button id="requestBill">طلب الحساب</button>
 
-  <div id="confirmationMessage" style="margin-top:20px; font-size:18px; font-weight:bold; display:none; color:green;">
-    ✅ طلبك قيد التنفيذ
-  </div>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -141,71 +69,65 @@
       measurementId: "G-XR5ZGKEZK8"
     };
 
-    // تشغيل Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // استخراج رقم الطاولة من الرابط ?table=5
-    const params = new URLSearchParams(window.location.search);
-    const tableNumber = params.get("table") || "غير محدد";
-    document.getElementById("tableTitle").textContent = "طاولتك: " + tableNumber;
+    // تحديث المجموع
+    document.querySelectorAll(".qty").forEach(select => {
+      select.addEventListener("change", () => {
+        const row = select.closest("tr");
+        const price = parseInt(row.cells[1].textContent);
+        const qty = parseInt(select.value);
+        row.querySelector(".total").textContent = price * qty;
 
-    // تحديث الإجماليات
-    const qtyInputs = document.querySelectorAll(".qty");
-    const rowTotals = document.querySelectorAll(".rowTotal");
-    const totalBox = document.getElementById("totalBox");
-
-    function updateTotals() {
-      let total = 0;
-      qtyInputs.forEach((input, index) => {
-        const price = parseInt(input.parentElement.previousElementSibling.textContent);
-        const qty = parseInt(input.value);
-        const rowTotal = price * qty;
-        rowTotals[index].textContent = rowTotal;
-        total += rowTotal;
+        let grand = 0;
+        document.querySelectorAll(".total").forEach(cell => grand += parseInt(cell.textContent));
+        document.getElementById("grandTotal").textContent = grand;
       });
-      totalBox.textContent = "الإجمالي: " + total + " ج.م";
-    }
-
-    qtyInputs.forEach(input => {
-      input.addEventListener("change", updateTotals);
     });
 
-    // إرسال الطلب
-    document.getElementById("submitOrder").addEventListener("click", () => {
-      let order = [];
-      qtyInputs.forEach((input, index) => {
-        const item = input.parentElement.previousElementSibling.previousElementSibling.textContent;
-        const price = parseInt(input.parentElement.previousElementSibling.textContent);
-        const qty = parseInt(input.value);
-        if (qty > 0) {
-          order.push({ item, price, qty, total: price * qty });
-        }
+    // زرار إتمام الطلب
+    document.getElementById("submitOrder").addEventListener("click", async () => {
+      const tableNumber = document.getElementById("tableNumber").value;
+      if (!tableNumber) { alert("⚠️ من فضلك أدخل رقم الطاولة"); return; }
+
+      const order = [];
+      document.querySelectorAll("#menu tr").forEach(row => {
+        const item = row.cells[0].textContent;
+        const price = parseInt(row.cells[1].textContent);
+        const qty = parseInt(row.querySelector(".qty").value);
+        if (qty > 0) order.push({ item, price, qty, total: price * qty });
       });
 
-      const notes = document.getElementById("notes").value;
-      const total = totalBox.textContent.replace("الإجمالي: ", "");
+      if (order.length === 0) { alert("⚠️ اختر صنف واحد على الأقل"); return; }
 
-      if (order.length === 0) {
-        alert("من فضلك اختر صنفاً واحداً على الأقل");
-        return;
-      }
-
-      // حفظ الطلب في Firestore
-      db.collection("orders").add({
+      await addDoc(collection(db, "orders"), {
         table: tableNumber,
-        order,
-        notes,
-        total,
-        status: "قيد التنفيذ",
+        order: order,
+        notes: document.getElementById("notes").value,
+        total: document.getElementById("grandTotal").textContent,
+        status: "جديد",
         timestamp: new Date()
-      }).then(() => {
-        document.getElementById("confirmationMessage").style.display = "block";
-      }).catch(err => {
-        alert("حدث خطأ: " + err.message);
       });
+
+      alert("✅ تم إرسال طلبك");
+    });
+
+    // زرار طلب الحساب
+    document.getElementById("requestBill").addEventListener("click", async () => {
+      const tableNumber = document.getElementById("tableNumber").value;
+      if (!tableNumber) { alert("⚠️ من فضلك أدخل رقم الطاولة"); return; }
+
+      const q = query(collection(db, "orders"), where("table", "==", tableNumber), orderBy("timestamp", "desc"), limit(1));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        await updateDoc(doc.ref, { status: "طلب حساب" });
+        alert("✅ تم إرسال طلب الحساب للمدير");
+      } else {
+        alert("⚠️ لا يوجد طلبات لهذه الطاولة");
+      }
     });
   </script>
-
 </body>
 </html>
