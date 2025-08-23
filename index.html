@@ -1,200 +1,137 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مقهى الشمس - طلب العميل</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة العميل</title>
   <style>
-    :root { --primary:#007bff; --success:#28a745; --muted:#6c757d; }
-    body{font-family:Arial,system-ui,-apple-system; margin:16px; text-align:center}
-    h1{margin:8px 0 4px}
-    #tableBadge{display:inline-block; background:#f3f4f6; border:1px solid #e5e7eb; padding:6px 10px; border-radius:999px; margin:6px 0; font-size:14px; color:#111827}
-    table{width:100%; border-collapse:collapse; margin:12px 0}
-    th,td{border:1px solid #e5e7eb; padding:10px; font-size:15px}
-    th{background:#f9fafb}
-    select{padding:6px; min-width:64px}
-    textarea{width:100%; min-height:72px; padding:10px; border:1px solid #e5e7eb; border-radius:8px; resize:vertical; box-sizing:border-box}
-    .totals{margin:10px 0; font-weight:bold; font-size:18px}
-    .btn{display:inline-block; padding:10px 16px; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; margin:6px 4px}
-    .btn-primary{background:var(--primary)}
-    .btn-success{background:var(--success)}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    #status{margin-top:10px; font-weight:bold}
-    /* تحسين العرض على الموبايل */
-    @media (max-width:480px){
-      th:nth-child(2), td:nth-child(2){width:72px}
-      th:nth-child(3), td:nth-child(3){width:84px}
-      th:nth-child(4), td:nth-child(4){width:84px}
-      td,th{padding:8px}
-    }
+    body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
+    select { width: 60px; padding: 3px; }
+    textarea { width: 100%; height: 60px; margin-top: 10px; }
+    button { margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+    #confirmBtn { background: #16a34a; color: white; }
+    #billBtn { background: #0ea5e9; color: white; display: none; }
+    #status { margin-top: 15px; font-weight: bold; }
   </style>
 </head>
 <body>
-
-  <h1>مرحباً بك في مقهى الشمس</h1>
-  <div id="tableBadge">رقم الطاولة: <span id="tableNum">—</span></div>
-  <p>اختر من القائمة:</p>
+  <h2>لوحة العميل - طاولة <span id="tableId"></span></h2>
 
   <table>
     <thead>
       <tr>
         <th>الصنف</th>
-        <th>السعر (ج.م)</th>
+        <th>السعر</th>
         <th>الكمية</th>
-        <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menuBody"></tbody>
+    <tbody id="menu">
+      <!-- يتم توليد الأصناف هنا -->
+    </tbody>
   </table>
 
-  <div class="totals">الإجمالي الكلي: <span id="grandTotal">0</span> ج.م</div>
+  <label for="notes">ملاحظات:</label>
+  <textarea id="notes" placeholder="اكتب ملاحظاتك هنا"></textarea>
 
-  <textarea id="notes" placeholder="ملاحظاتك (اختياري)..."></textarea>
-
-  <div>
-    <button id="confirmBtn" class="btn btn-primary">إتمام الطلب</button>
-    <button id="billBtn" class="btn btn-success" style="display:none;">طلب الحساب</button>
-  </div>
-
+  <button id="confirmBtn">إتمام الطلب</button>
+  <button id="billBtn">طلب الحساب</button>
   <div id="status"></div>
 
-  <!-- Firebase (Compat) لسهولة العمل على GitHub Pages بدون Bundlers) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
   <script>
-    /*** 1) إعداد فايربيز — استخدم إعدادات مشروعك (هذه إعداداتك التي زودتني بها) ***/
+    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
       projectId: "my-restaurant-aba99",
       storageBucket: "my-restaurant-aba99.appspot.com",
       messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e",
-      measurementId: "G-XR5ZGKEZK8"
+      appId: "1:512969391867:web:36a528665b3469871a3a5e"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    /*** 2) قراءة رقم الطاولة من الرابط ?table=6 ***/
-    const params = new URLSearchParams(location.search);
-    const tableNumber = params.get("table") || "غير محددة";
-    document.getElementById("tableNum").textContent = tableNumber;
-
-    /*** 3) الأصناف (≥10) بالأسعار ***/
+    // قائمة الأصناف
     const menuItems = [
-      { name:"شاي",           price:10 },
-      { name:"قهوة",          price:15 },
-      { name:"كولا",          price:12 },
-      { name:"سبرايت",        price:12 },
-      { name:"ميرندا",        price:12 },
-      { name:"نسكافيه",       price:18 },
-      { name:"كابتشينو",      price:25 },
-      { name:"موكا",          price:30 },
-      { name:"عصير برتقال",   price:20 },
-      { name:"عصير ليمون",    price:20 },
-      { name:"مياه معدنية",   price:6  }
+      { name: "قهوة تركي", price: 20 },
+      { name: "كابتشينو", price: 25 },
+      { name: "شاي بالنعناع", price: 15 },
+      { name: "عصير برتقال", price: 18 },
+      { name: "بيبسي", price: 12 },
+      { name: "مياه معدنية", price: 8 },
+      { name: "ساندويتش جبنة", price: 30 },
+      { name: "ساندويتش شاورما", price: 40 },
+      { name: "بيتزا صغيرة", price: 50 },
+      { name: "كرواسون", price: 22 }
     ];
 
-    /*** 4) رسم الجدول + منطق الحساب ***/
-    const menuBody   = document.getElementById("menuBody");
-    const grandTotalEl = document.getElementById("grandTotal");
-    const statusEl   = document.getElementById("status");
-    let lastOrderDocId = null; // نحتفظ بآخر طلب عشان نحدث حالته عند طلب الحساب
+    // تحديد رقم الطاولة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableId = urlParams.get("table") || "غير محدد";
+    document.getElementById("tableId").textContent = tableId;
 
-    function renderMenu(){
-      menuBody.innerHTML = "";
-      menuItems.forEach((item, i) => {
-        const tr = document.createElement("tr");
+    // توليد القائمة
+    const menuTable = document.getElementById("menu");
+    menuItems.forEach((item, i) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.price} ج</td>
+        <td>
+          <select id="qty-${i}">
+            ${Array.from({length: 11}, (_, n) => `<option value="${n}">${n}</option>`).join("")}
+          </select>
+        </td>
+      `;
+      menuTable.appendChild(row);
+    });
 
-        // قائمة منسدلة كميات 0..10
-        let qtySelect = `<select id="qty-${i}" aria-label="كمية ${item.name}">`;
-        for(let q=0; q<=10; q++) qtySelect += `<option value="${q}">${q}</option>`;
-        qtySelect += `</select>`;
+    let lastOrderDocId = null;
 
-        tr.innerHTML = `
-          <td>${item.name}</td>
-          <td>${item.price}</td>
-          <td>${qtySelect}</td>
-          <td id="subtotal-${i}">0</td>
-        `;
-        menuBody.appendChild(tr);
+    // إتمام الطلب
+    document.getElementById("confirmBtn").addEventListener("click", async () => {
+      const order = menuItems.map((item, i) => {
+        const qty = parseInt(document.getElementById(`qty-${i}`).value);
+        return qty > 0 ? { ...item, quantity: qty } : null;
+      }).filter(x => x);
 
-        // تحديث المجاميع عند تغيير الكمية
-        document.getElementById(`qty-${i}`).addEventListener("change", () => recalc());
-      });
-    }
-
-    function recalc(){
-      let grand = 0;
-      menuItems.forEach((item, i) => {
-        const qty = parseInt(document.getElementById(`qty-${i}`).value || "0", 10);
-        const sub = qty * item.price;
-        document.getElementById(`subtotal-${i}`).textContent = sub;
-        grand += sub;
-      });
-      grandTotalEl.textContent = grand;
-    }
-
-    renderMenu(); recalc();
-
-    /*** 5) إتمام الطلب — حفظ في Firestore ثم إظهار زر طلب الحساب ***/
-    const confirmBtn = document.getElementById("confirmBtn");
-    const billBtn    = document.getElementById("billBtn");
-    const notesEl    = document.getElementById("notes");
-
-    confirmBtn.addEventListener("click", async () => {
-      // تجميع الطلب
-      const items = [];
-      menuItems.forEach((item, i) => {
-        const qty = parseInt(document.getElementById(`qty-${i}`).value || "0", 10);
-        if(qty > 0){
-          items.push({ name:item.name, price:item.price, qty:qty, subtotal: qty*item.price });
-        }
-      });
-
-      if(items.length === 0){
-        alert("من فضلك اختر صنفاً واحداً على الأقل.");
+      const notes = document.getElementById("notes").value;
+      if(order.length === 0 && !notes){
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").textContent = "⚠️ اختر صنف أو اكتب ملاحظة.";
         return;
       }
 
-      const total = parseInt(grandTotalEl.textContent || "0", 10);
-      const notes = notesEl.value.trim();
-
-      // حفظ على فايرستور
       try {
         const docRef = await db.collection("orders").add({
-          table: String(tableNumber),
-          items,
+          table: tableId,
+          order,
           notes,
-          total,
-          status: "جديد",                    // الحالة الابتدائية
+          status: "طلب جديد",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         lastOrderDocId = docRef.id;
-
-        // واجهة المستخدم
-        statusEl.style.color = "green";
-        statusEl.textContent = `تم إرسال طلبك. المجموع: ${total} ج.م`;
-        confirmBtn.style.display = "none";
-        billBtn.style.display = "inline-block";
-
-        // قفل الحقول بعد الإرسال
-        menuItems.forEach((_, i)=> document.getElementById(`qty-${i}`).disabled = true);
-        notesEl.disabled = true;
-
-      } catch(err){
+        document.getElementById("status").style.color = "green";
+        document.getElementById("status").textContent = "✅ تم إرسال الطلب.";
+        document.getElementById("billBtn").style.display = "inline-block";
+      } catch(err) {
         console.error(err);
-        alert("حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.");
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").textContent = "تعذر إرسال الطلب.";
       }
     });
 
-    /*** 6) طلب الحساب — تحديث حالة نفس الوثيقة إلى "طلب حساب" ***/
-    billBtn.addEventListener("click", async () => {
+    // طلب الحساب
+    document.getElementById("billBtn").addEventListener("click", async () => {
       if(!lastOrderDocId){
-        // احتياط: لو الصفحة اتعملها ريفريش بعد الإرسال، مش هنلاقي id
-        statusEl.style.color = "#dc2626";
-        statusEl.textContent = "لا يوجد طلب مسجل في هذه الجلسة. أعد إرسال الطلب أولاً.";
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").textContent = "⚠️ لم يتم تسجيل طلب.";
         return;
       }
       try {
@@ -202,12 +139,14 @@
           status: "طلب حساب",
           billRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        statusEl.style.color = "#0ea5e9";
-        statusEl.textContent = "طلبك قيد التنفيذ… تم إشعار الإدارة بطلب الحساب.";
-        billBtn.disabled = true;
-      } catch(err){
+        document.getElementById("status").style.color = "#0ea5e9";
+        document.getElementById("status").textContent = "✅ تم إرسال طلب الحساب.";
+        document.getElementById("billBtn").disabled = true;
+        document.getElementById("billBtn").style.opacity = "0.6";
+      } catch(err) {
         console.error(err);
-        alert("تعذر إرسال طلب الحساب. حاول مرة أخرى.");
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").textContent = "تعذر إرسال طلب الحساب.";
       }
     });
   </script>
