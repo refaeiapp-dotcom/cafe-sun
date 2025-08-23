@@ -26,8 +26,8 @@
     th {
       background: #f0f0f0;
     }
-    input[type="number"] {
-      width: 60px;
+    select {
+      padding: 5px;
     }
     .total-box {
       margin: 15px 0;
@@ -74,7 +74,7 @@
   <p id="statusMessage" style="margin-top:15px;font-weight:bold;"></p>
 
   <script>
-    // ✅ قائمة الأصناف (مباشرة بدون JSON خارجي)
+    // ✅ قائمة الأصناف
     const menuItems = [
       { name: "شاي", price: 5 },
       { name: "قهوة", price: 7 },
@@ -101,19 +101,24 @@
     menuItems.forEach((item, index) => {
       const row = document.createElement("tr");
 
+      // إنشاء قائمة منسدلة للكمية
+      let qtyOptions = `<select id="qty-${index}">`;
+      for (let i = 0; i <= 10; i++) {
+        qtyOptions += `<option value="${i}">${i}</option>`;
+      }
+      qtyOptions += `</select>`;
+
       row.innerHTML = `
         <td>${item.name}</td>
         <td>${item.price}</td>
-        <td>
-          <input type="number" min="0" value="0" id="qty-${index}">
-        </td>
+        <td>${qtyOptions}</td>
         <td id="total-${index}">0</td>
       `;
 
       menuBody.appendChild(row);
 
       // تحديث الإجمالي
-      document.getElementById(`qty-${index}`).addEventListener("input", () => updateTotals());
+      document.getElementById(`qty-${index}`).addEventListener("change", () => updateTotals());
     });
 
     function updateTotals() {
