@@ -5,20 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة العميل</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 10px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #f4f4f4; }
-    select { width: 60px; padding: 3px; }
-    textarea { width: 100%; height: 60px; margin-top: 10px; }
-    button { margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
-    #confirmBtn { background: #16a34a; color: white; }
-    #billBtn { background: #0ea5e9; color: white; display: none; }
-    #status { margin-top: 15px; font-weight: bold; }
+    th, td { border: 1px solid #ccc; padding: 8px; font-size: 14px; }
+    th { background: #f2f2f2; }
+    select, textarea { width: 100%; padding: 5px; font-size: 14px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+    #submitBtn { background: green; color: white; }
+    #billBtn { background: blue; color: white; display: none; }
+    #messageBox { margin-top: 15px; font-weight: bold; }
+    #totalRow { font-weight: bold; background: #f9f9f9; }
   </style>
 </head>
 <body>
-  <h2>لوحة العميل - طاولة <span id="tableId"></span></h2>
+
+  <h2>لوحة العميل - طاولة <span id="tableNumber"></span></h2>
 
   <table>
     <thead>
@@ -26,129 +27,149 @@
         <th>الصنف</th>
         <th>السعر</th>
         <th>الكمية</th>
+        <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menu">
-      <!-- يتم توليد الأصناف هنا -->
-    </tbody>
+    <tbody id="menuBody"></tbody>
+    <tfoot>
+      <tr id="totalRow">
+        <td colspan="3">المجموع الكلي</td>
+        <td id="grandTotal">0 جنيه</td>
+      </tr>
+    </tfoot>
   </table>
 
   <label for="notes">ملاحظات:</label>
-  <textarea id="notes" placeholder="اكتب ملاحظاتك هنا"></textarea>
+  <textarea id="notes" rows="3"></textarea>
 
-  <button id="confirmBtn">إتمام الطلب</button>
+  <!-- الرسائل -->
+  <div id="messageBox"></div>
+
+  <!-- الأزرار -->
+  <button id="submitBtn">إتمام الطلب</button>
   <button id="billBtn">طلب الحساب</button>
-  <div id="status"></div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script>
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
       projectId: "my-restaurant-aba99",
       storageBucket: "my-restaurant-aba99.appspot.com",
       messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e"
+      appId: "1:512969391867:web:36a528665b3469871a3a5e",
+      measurementId: "G-XR5ZGKEZK8"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // جلب رقم الطاولة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNumber = urlParams.get("table") || "غير محددة";
+    document.getElementById("tableNumber").innerText = tableNumber;
 
     // قائمة الأصناف
-    const menuItems = [
+    const menu = [
       { name: "قهوة تركي", price: 20 },
       { name: "كابتشينو", price: 25 },
-      { name: "شاي بالنعناع", price: 15 },
-      { name: "عصير برتقال", price: 18 },
+      { name: "شاي", price: 10 },
+      { name: "عصير برتقال", price: 15 },
+      { name: "عصير مانجو", price: 18 },
       { name: "بيبسي", price: 12 },
-      { name: "مياه معدنية", price: 8 },
-      { name: "ساندويتش جبنة", price: 30 },
-      { name: "ساندويتش شاورما", price: 40 },
-      { name: "بيتزا صغيرة", price: 50 },
-      { name: "كرواسون", price: 22 }
+      { name: "مياه معدنية", price: 7 },
+      { name: "ساندويتش جبنة", price: 22 },
+      { name: "ساندويتش برجر", price: 35 },
+      { name: "بيتزا صغيرة", price: 45 }
     ];
 
-    // تحديد رقم الطاولة من الرابط
-    const urlParams = new URLSearchParams(window.location.search);
-    const tableId = urlParams.get("table") || "غير محدد";
-    document.getElementById("tableId").textContent = tableId;
-
-    // توليد القائمة
-    const menuTable = document.getElementById("menu");
-    menuItems.forEach((item, i) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item.name}</td>
-        <td>${item.price} ج</td>
-        <td>
-          <select id="qty-${i}">
-            ${Array.from({length: 11}, (_, n) => `<option value="${n}">${n}</option>`).join("")}
-          </select>
-        </td>
+    const menuBody = document.getElementById("menuBody");
+    menu.forEach((item, index) => {
+      menuBody.innerHTML += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.price} جنيه</td>
+          <td>
+            <select id="qty-${index}" onchange="updateTotals()">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </td>
+          <td id="subtotal-${index}">0 جنيه</td>
+        </tr>
       `;
-      menuTable.appendChild(row);
     });
 
-    let lastOrderDocId = null;
+    // حساب الإجماليات
+    window.updateTotals = function() {
+      let grandTotal = 0;
+      menu.forEach((item, index) => {
+        const qty = parseInt(document.getElementById(`qty-${index}`).value);
+        const subtotal = qty * item.price;
+        document.getElementById(`subtotal-${index}`).innerText = subtotal + " جنيه";
+        grandTotal += subtotal;
+      });
+      document.getElementById("grandTotal").innerText = grandTotal + " جنيه";
+    };
 
-    // إتمام الطلب
-    document.getElementById("confirmBtn").addEventListener("click", async () => {
-      const order = menuItems.map((item, i) => {
-        const qty = parseInt(document.getElementById(`qty-${i}`).value);
-        return qty > 0 ? { ...item, quantity: qty } : null;
-      }).filter(x => x);
+    const messageBox = document.getElementById("messageBox");
+
+    // زر إتمام الطلب
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      let orderItems = [];
+      let total = 0;
+
+      menu.forEach((item, index) => {
+        const qty = parseInt(document.getElementById(`qty-${index}`).value);
+        if (qty > 0) {
+          orderItems.push({ name: item.name, price: item.price, qty: qty, subtotal: qty * item.price });
+          total += qty * item.price;
+        }
+      });
 
       const notes = document.getElementById("notes").value;
-      if(order.length === 0 && !notes){
-        document.getElementById("status").style.color = "red";
-        document.getElementById("status").textContent = "⚠️ اختر صنف أو اكتب ملاحظة.";
+
+      if (orderItems.length === 0) {
+        messageBox.style.color = "red";
+        messageBox.innerText = "⚠️ من فضلك اختر صنف واحد على الأقل.";
         return;
       }
 
       try {
-        const docRef = await db.collection("orders").add({
-          table: tableId,
-          order,
-          notes,
-          status: "طلب جديد",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        await addDoc(collection(db, "orders"), {
+          table: tableNumber,
+          items: orderItems,
+          notes: notes,
+          total: total,
+          status: "جديد",
+          timestamp: new Date()
         });
-        lastOrderDocId = docRef.id;
-        document.getElementById("status").style.color = "green";
-        document.getElementById("status").textContent = "✅ تم إرسال الطلب.";
+
+        messageBox.style.color = "green";
+        messageBox.innerText = "✅ تم إرسال طلبك بنجاح. سيتم تجهيز الطلب قريبًا.";
+        document.getElementById("submitBtn").style.display = "none";
         document.getElementById("billBtn").style.display = "inline-block";
-      } catch(err) {
-        console.error(err);
-        document.getElementById("status").style.color = "red";
-        document.getElementById("status").textContent = "تعذر إرسال الطلب.";
+
+      } catch (e) {
+        messageBox.style.color = "red";
+        messageBox.innerText = "❌ خطأ في إرسال الطلب، حاول مرة أخرى.";
+        console.error("Error adding document: ", e);
       }
     });
 
-    // طلب الحساب
-    document.getElementById("billBtn").addEventListener("click", async () => {
-      if(!lastOrderDocId){
-        document.getElementById("status").style.color = "red";
-        document.getElementById("status").textContent = "⚠️ لم يتم تسجيل طلب.";
-        return;
-      }
-      try {
-        await db.collection("orders").doc(lastOrderDocId).update({
-          status: "طلب حساب",
-          billRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        document.getElementById("status").style.color = "#0ea5e9";
-        document.getElementById("status").textContent = "✅ تم إرسال طلب الحساب.";
-        document.getElementById("billBtn").disabled = true;
-        document.getElementById("billBtn").style.opacity = "0.6";
-      } catch(err) {
-        console.error(err);
-        document.getElementById("status").style.color = "red";
-        document.getElementById("status").textContent = "تعذر إرسال طلب الحساب.";
-      }
+    // زر طلب الحساب
+    document.getElementById("billBtn").addEventListener("click", () => {
+      messageBox.style.color = "blue";
+      messageBox.innerText = "💳 تم إرسال طلب الحساب، سيأتيك النادل قريبًا.";
     });
   </script>
+
 </body>
 </html>
