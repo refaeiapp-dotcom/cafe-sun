@@ -1,102 +1,134 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة العميل - مقهى</title>
+  <title>طلب جديد</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      direction: rtl;
-      text-align: right;
-      margin: 20px;
-      background: #f9f9f9;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
     }
-    h1 {
-      color: #333;
+    .container {
+      background: #fff;
+      padding: 20px;
+      margin-top: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+    h2 {
       text-align: center;
+      margin-bottom: 20px;
+    }
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .menu-item button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .menu-item button:hover {
+      background: #218838;
     }
     textarea {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
+      height: 80px;
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      border-radius: 6px;
     }
-    button {
+    .submit-btn {
       background: #28a745;
       color: white;
-      padding: 10px 20px;
       border: none;
-      border-radius: 6px;
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
       cursor: pointer;
+      margin-top: 15px;
       font-size: 16px;
     }
-    button:hover {
+    .submit-btn:hover {
       background: #218838;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 id="title">طلب جديد</h1>
-    <label for="note">ملاحظات الطلب:</label>
-    <textarea id="note" rows="4" placeholder="أدخل ملاحظاتك هنا..."></textarea>
-    <br>
-    <button id="submitOrder">إتمام الطلب</button>
+    <h2>طلب جديد</h2>
+    <div id="menu"></div>
+
+    <label for="notes">ملاحظات الطلب:</label>
+    <textarea id="notes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+
+    <button class="submit-btn" onclick="submitOrder()">إتمام الطلب</button>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // إعدادات Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
-      authDomain: "my-restaurant-aba99.firebaseapp.com",
-      projectId: "my-restaurant-aba99",
-      storageBucket: "my-restaurant-aba99.appspot.com",
-      messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e",
-      measurementId: "G-XR5ZGKEZK8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // جلب رقم الطاولة من الرابط
+  <script>
+    // قراءة رقم الطاولة من الرابط
     const urlParams = new URLSearchParams(window.location.search);
-    const tableNumber = urlParams.get("table") || "غير محدد";
+    const tableNumber = urlParams.get('table') || "غير محدد";
+    document.title = "طلب جديد - طاولة " + tableNumber;
+    document.querySelector("h2").innerText = "طلب جديد - طاولة " + tableNumber;
 
-    // تحديث العنوان
-    document.getElementById("title").innerText = "طلب جديد - طاولة " + tableNumber;
+    // تحميل المنيو من ملف JSON
+    fetch('menu.json')
+      .then(response => response.json())
+      .then(data => {
+        const menuDiv = document.getElementById('menu');
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = "menu-item";
+          div.innerHTML = `
+            <span><strong>${item.name}</strong> - ${item.price} جنيه</span>
+            <button onclick="addToOrder('${item.name}', ${item.price})">إضافة</button>
+          `;
+          menuDiv.appendChild(div);
+        });
+      })
+      .catch(error => console.error('خطأ في تحميل المنيو:', error));
+
+    // مصفوفة الطلب
+    let order = [];
+
+    function addToOrder(name, price) {
+      order.push({name, price});
+      alert(`تمت إضافة ${name} للطلب`);
+    }
 
     // إرسال الطلب
-    document.getElementById("submitOrder").addEventListener("click", async () => {
-      try {
-        const orderData = {
-          tableNumber: tableNumber,
-          note: document.getElementById("note").value || "بدون ملاحظات",
-          createdAt: new Date().toISOString()
-        };
-
-        const docRef = await addDoc(collection(db, "orders"), orderData);
-
-        alert("تم إرسال الطلب بنجاح ✅ \nرقم الطلب: " + docRef.id);
-      } catch (e) {
-        console.error("Error adding document: ", e);
-        alert("حدث خطأ أثناء إرسال الطلب ❌");
+    function submitOrder() {
+      const notes = document.getElementById('notes').value;
+      if(order.length === 0) {
+        alert("من فضلك اختر صنف واحد على الأقل");
+        return;
       }
-    });
+      // هنا ممكن نربط مع Firebase لاحقاً
+      console.log("رقم الطاولة:", tableNumber);
+      console.log("الطلب:", order);
+      console.log("الملاحظات:", notes);
+
+      alert("✅ تم إرسال طلبك، طاولة " + tableNumber);
+      order = []; // تفريغ الطلب بعد الإرسال
+      document.getElementById('notes').value = "";
+    }
   </script>
 </body>
 </html>
