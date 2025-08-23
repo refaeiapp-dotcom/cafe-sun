@@ -1,116 +1,41 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طلب الطاولة</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 10px; background: #f9f9f9; }
-    h2 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background: #333; color: #fff; }
-    input, select, textarea { width: 100%; padding: 6px; margin: 3px 0; }
-    button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 5px; }
-    button:hover { background: #218838; }
-    #message { text-align: center; margin-top: 10px; font-weight: bold; }
-  </style>
-</head>
-<body>
+<!-- Firebase SDK -->
+<script type="module">
+  // استدعاء المكتبات المطلوبة
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <h2>قائمة الطلبات - طاولة رقم <span id="tableNum">5</span></h2>
+  // إعدادات Firebase الخاصة بتطبيقك
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
+    authDomain: "my-restaurant-aba99.firebaseapp.com",
+    projectId: "my-restaurant-aba99",
+    storageBucket: "my-restaurant-aba99.appspot.com",
+    messagingSenderId: "512969391867",
+    appId: "1:512969391867:web:36a528665b3469871a3a5e",
+    measurementId: "G-XR5ZGKEZK8"
+  };
 
-  <table>
-    <thead>
-      <tr>
-        <th>الصنف</th>
-        <th>الكمية</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>قهوة تركي</td>
-        <td><select class="qty"><option value="0">0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
-      </tr>
-      <tr>
-        <td>اسبريسو</td>
-        <td><select class="qty"><option value="0">0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
-      </tr>
-      <tr>
-        <td>شاي</td>
-        <td><select class="qty"><option value="0">0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
-      </tr>
-      <tr>
-        <td>عصير برتقال</td>
-        <td><select class="qty"><option value="0">0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
-      </tr>
-    </tbody>
-  </table>
+  // تهيئة Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  <label>ملاحظات إضافية:</label>
-  <textarea id="notes" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+  // لما المستخدم يضغط على زر "إتمام الطلب"
+  document.getElementById("submitOrder").addEventListener("click", async () => {
+    try {
+      // مثال: بيانات تجريبية
+      const orderData = {
+        tableNumber: 5,
+        note: document.getElementById("note").value || "بدون ملاحظات",
+        createdAt: new Date().toISOString()
+      };
 
-  <button id="sendOrder">إرسال الطلب</button>
-  <p id="message"></p>
+      // إضافة البيانات إلى Firestore داخل collection اسمه "orders"
+      const docRef = await addDoc(collection(db, "orders"), orderData);
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    // إعدادات Firebase الخاصة بك
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
-      authDomain: "my-restaurant-aba99.firebaseapp.com",
-      projectId: "my-restaurant-aba99",
-      storageBucket: "my-restaurant-aba99.firebasestorage.app",
-      messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e",
-      measurementId: "G-XR5ZGKEZK8"
-    };
-
-    // تهيئة Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // عند الضغط على زر إرسال الطلب
-    document.getElementById("sendOrder").addEventListener("click", async () => {
-      const tableNumber = document.getElementById("tableNum").innerText;
-      const rows = document.querySelectorAll("tbody tr");
-      const notes = document.getElementById("notes").value;
-
-      let orderItems = [];
-      rows.forEach(row => {
-        const item = row.cells[0].innerText;
-        const qty = row.querySelector(".qty").value;
-        if (qty > 0) {
-          orderItems.push({ item, quantity: parseInt(qty) });
-        }
-      });
-
-      if (orderItems.length === 0) {
-        document.getElementById("message").innerText = "⚠️ اختر صنف واحد على الأقل.";
-        document.getElementById("message").style.color = "red";
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "orders"), {
-          tableNumber: tableNumber,
-          items: orderItems,
-          notes: notes,
-          status: "قيد التنفيذ",
-          createdAt: new Date()
-        });
-        document.getElementById("message").innerText = "✅ تم إرسال طلبك بنجاح!";
-        document.getElementById("message").style.color = "green";
-      } catch (e) {
-        console.error("خطأ:", e);
-        document.getElementById("message").innerText = "❌ حصل خطأ أثناء إرسال الطلب.";
-        document.getElementById("message").style.color = "red";
-      }
-    });
-  </script>
-
-</body>
-</html>
+      alert("تم إرسال الطلب بنجاح ✅ \nID: " + docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      alert("حدث خطأ أثناء إرسال الطلب ❌");
+    }
+  });
+</script>
