@@ -7,6 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; }
     h2 { text-align: center; }
+    #tableNumber { text-align: center; font-size: 18px; margin-bottom: 10px; color: #333; font-weight: bold; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
     th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
     th { background: #eee; }
@@ -20,6 +21,7 @@
 </head>
 <body>
   <h2>قائمة الطعام</h2>
+  <div id="tableNumber"></div> <!-- رقم الطاولة يظهر هنا -->
 
   <table>
     <thead>
@@ -30,9 +32,7 @@
         <th>الإجمالي</th>
       </tr>
     </thead>
-    <tbody id="menu">
-      <!-- الأصناف -->
-    </tbody>
+    <tbody id="menu"></tbody>
   </table>
 
   <h3>ملاحظات:</h3>
@@ -46,11 +46,9 @@
 
   <!-- Firebase -->
   <script type="module">
-    // Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // Config (من مشروعك)
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -64,7 +62,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // قائمة الأصناف
     const items = [
       { name: "شاي", price: 10 },
       { name: "قهوة", price: 15 },
@@ -81,7 +78,6 @@
     const menu = document.getElementById("menu");
     const totalPriceEl = document.getElementById("totalPrice");
 
-    // إنشاء الجدول
     items.forEach((item, index) => {
       const tr = document.createElement("tr");
 
@@ -97,7 +93,6 @@
       `;
       menu.appendChild(tr);
 
-      // تحديث الإجمالي
       document.getElementById(`qty-${index}`).addEventListener("change", updateTotal);
     });
 
@@ -112,11 +107,11 @@
       totalPriceEl.textContent = total;
     }
 
-    // جلب رقم الطاولة من الرابط
+    // جلب رقم الطاولة من الرابط وعرضه
     const urlParams = new URLSearchParams(window.location.search);
     const tableNumber = urlParams.get("table") || "غير محدد";
+    document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
 
-    // زرار إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
@@ -133,6 +128,7 @@
 
       set(ref(db, "orders/table" + tableNumber), {
         status: "قيد التنفيذ",
+        table: tableNumber,
         order,
         notes,
         total
@@ -142,7 +138,6 @@
       document.getElementById("billBtn").style.display = "block";
     });
 
-    // زرار طلب الحساب
     document.getElementById("billBtn").addEventListener("click", () => {
       set(ref(db, "orders/table" + tableNumber + "/status"), "طلب حساب");
       document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
