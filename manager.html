@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة المدير</title>
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: center; background-color: #f9f9f9; }
+    h1 { color: #b5651d; margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 90%; margin: auto; }
+    .table-btn { padding: 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; }
+    .gray { background-color: gray; } .red { background-color: red; } .yellow { background-color: goldenrod; } .blue { background-color: royalblue; } .green { background-color: green; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background: #fff; padding: 20px; border-radius: 10px; width: 350px; text-align: center; }
+    .close-btn, .send-btn { background: crimson; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+    .send-btn { background: seagreen; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>لوحة المدير - مقهى الشمس ☕</h1>
+  <div class="grid" id="tables-grid"></div>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">تفاصيل الطاولة</h2>
+      <div id="modal-body">لا يوجد بيانات</div>
+      <button class="send-btn" onclick="sendToKitchen()">إرسال للبوفيه</button>
+      <button class="close-btn" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
+      authDomain: "my-restaurant-aba99.firebaseapp.com",
+      projectId: "my-restaurant-aba99",
+      storageBucket: "my-restaurant-aba99.appspot.com",
+      messagingSenderId: "512969391867",
+      appId: "1:512969391867:web:36a528665b3469871a3a5e",
+      databaseURL: "https://my-restaurant-aba99-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const grid = document.getElementById("tables-grid");
+    let currentTable = null;
+
+    for (let i = 1; i <= 21; i++) {
+      const btn = document.createElement("button");
+      btn.className = "table-btn gray";
+      btn.innerText = "طاولة " + i;
+      btn.dataset.table = i;
+      btn.addEventListener("click", () => handleClick(btn, i));
+      grid.appendChild(btn);
+
+      const tableRef = ref(db, "orders/table" + i);
+      onValue(tableRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          updateButtonColor(btn, data.status);
+        } else {
+          btn.className = "table-btn gray";
+        }
+      });
+    }
+
+    function updateButtonColor(btn, status) {
+      btn.className = "table-btn";
+      switch(status) {
+        case "قيد التنفيذ": btn.classList.add("red"); break;
+        case "قيد التحضير": btn.classList.add("yellow"); break;
+        case "طلب حساب": btn.classList.add("blue"); break;
+        case "منتهي": btn.classList.add("green"); break;
+        default: btn.classList.add("gray");
+      }
+    }
+
+    function handleClick(btn, tableNumber) {
+      currentTable = tableNumber;
+      if (btn.classList.contains("red") || btn.classList.contains("yellow") || btn.classList.contains("blue")) {
+        openModal(tableNumber);
+      } else if (btn.classList.contains("green")) {
+        set(ref(db, "orders/table" + tableNumber + "/status"), "");
+      }
+    }
+
+    function openModal(tableNumber) {
+      const modal = document.getElementById("modal");
+      modal.style.display = "flex";
+      document.getElementById("modal-title").innerText = "تفاصيل الطاولة " + tableNumber;
+
+      const tableRef = ref(db, "orders/table" + tableNumber);
+      onValue(tableRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          let html = "<h3>الحالة: " + (data.status || "غير محدد") + "</h3>";
+          if (data.order) {
+            html += "<ul style='text-align:right'>";
+            data.order.forEach(item => {
+              html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
+            });
+            html += "</ul>";
+          }
+          html += "<p><b>الإجمالي:</b> " + (data.total || 0) + " جنيه</p>";
+          if (data.notes) html += "<p><b>ملاحظات:</b> " + data.notes + "</p>";
+          document.getElementById("modal-body").innerHTML = html;
+        } else {
+          document.getElementById("modal-body").innerHTML = "<p>لا يوجد طلبات</p>";
+        }
+      });
+    }
+
+    function closeModal() { document.getElementById("modal").style.display = "none"; }
+    function sendToKitchen() {
+      if (currentTable) {
+        set(ref(db, "orders/table" + currentTable + "/status"), "قيد التحضير");
+        closeModal();
+      }
+    }
+  </script>
+</body>
+</html>
