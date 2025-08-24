@@ -75,7 +75,7 @@
     // ✅ جلب ID العامل من الرابط
     const params = new URLSearchParams(window.location.search);
     const baristaId = params.get("id") || "barista";
-    const baristaNumber = baristaId.replace("barista", "");
+    const baristaNumber = baristaId.startsWith("barista") ? baristaId.slice(7) : "?";
     document.getElementById("baristaName").textContent = "👤 العامل رقم " + baristaNumber;
 
     const ordersDiv = document.getElementById("orders");
