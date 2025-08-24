@@ -4,19 +4,16 @@
   <meta charset="UTF-8" />
   <title>لوحة المدير</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- أيقونة شخص -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: Tahoma, Arial, sans-serif; background:#f9f9f9; text-align:center; margin:0; padding:20px; }
     h1 { margin:10px 0 20px; color:#333; }
 
-    /* شريط العمال */
     .baristas { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:18px; }
     .barista-icon { font-size:16px; }
     .barista-icon i { font-size:28px; display:block; margin-bottom:6px; color:seagreen; }
     .busy i { color:crimson; }
 
-    /* شبكة الطاولات (أزرار دائرية) */
     .grid {
       display:grid;
       grid-template-columns:repeat(3, 1fr);
@@ -35,7 +32,6 @@
     .blue { background:royalblue; }
     .green { background:seagreen; }
 
-    /* المودال */
     .modal {
       display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.5);
@@ -51,7 +47,6 @@
     .assign-btn { background:seagreen; display:block; width:100%; }
     .close-btn { background:darkred; }
 
-    /* أزرار أسفل الصفحة */
     .footer-buttons { display:flex; justify-content:center; gap:14px; margin-top:8px; flex-wrap:wrap; }
     .footer-buttons button {
       padding:10px 16px; border:none; border-radius:8px; color:#fff; font-size:16px; cursor:pointer;
@@ -64,7 +59,6 @@
 
   <h1>☕ لوحة المدير - إدارة الطلبات</h1>
 
-  <!-- شريط العمال مع عدّاد -->
   <div class="baristas">
     <div class="barista-icon" id="barista1-status"><i class="fa-solid fa-user"></i> Barista 1 (<span id="b1c">0</span>)</div>
     <div class="barista-icon" id="barista2-status"><i class="fa-solid fa-user"></i> Barista 2 (<span id="b2c">0</span>)</div>
@@ -73,10 +67,8 @@
     <div class="barista-icon" id="barista5-status"><i class="fa-solid fa-user"></i> Barista 5 (<span id="b5c">0</span>)</div>
   </div>
 
-  <!-- شبكة الطاولات -->
   <div class="grid" id="tables-grid"></div>
 
-  <!-- المودال -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <h2 id="modal-title">تفاصيل الطاولة</h2>
@@ -87,7 +79,6 @@
     </div>
   </div>
 
-  <!-- أزرار أسفل الصفحة -->
   <div class="footer-buttons">
     <button class="clear-btn" onclick="clearAllOrders()">🗑️ تصفير كل الطلبات</button>
     <button class="workers-btn" onclick="goToWorkers()">👥 لوحة العمال</button>
@@ -97,7 +88,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -113,7 +103,6 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // إنشاء أزرار الطاولات
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -124,7 +113,15 @@
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
-          updateButtonColor(btn, snapshot.val().status);
+          const data = snapshot.val();
+          let status = data.status || "";
+
+          // ✅ fallback: لو مفيش status مباشر، ناخد آخر حالة من orderHistory
+          if (!status && Array.isArray(data.orderHistory) && data.orderHistory.length > 0) {
+            status = data.orderHistory[data.orderHistory.length - 1].status || "";
+          }
+
+          updateButtonColor(btn, status);
         } else {
           btn.className = "table-btn gray";
         }
@@ -142,7 +139,6 @@
       }
     }
 
-    // فتح المودال
     function openModal(tableNumber) {
       currentTable = tableNumber;
       document.getElementById("modal").style.display = "flex";
@@ -154,36 +150,21 @@
         if (snapshot.exists()) {
           const data = snapshot.val();
           let html = `<h3>الحالة: ${data.status || "غير محدد"}</h3>`;
-
-          // ✅ دعم orderHistory لو موجود
-          if (Array.isArray(data.orderHistory) && data.orderHistory.length) {
-            data.orderHistory.forEach((ord, idx) => {
-              html += `<h4>الطلب ${idx+1}:</h4><ul>`;
-              ord.order.forEach(item => {
-                html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
-              });
-              html += `</ul><p><b>الإجمالي:</b> ${ord.total} جنيه</p>`;
-              if (ord.notes) html += `<p><b>ملاحظات:</b> ${ord.notes}</p>`;
-              html += "<hr/>";
-            });
-          } 
-          // أو الطلبات العادية (لو ما فيش orderHistory)
-          else if (Array.isArray(data.order) && data.order.length) {
+          if (Array.isArray(data.order) && data.order.length) {
             html += "<ul>";
             data.order.forEach(item => {
               html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
             });
             html += "</ul>";
-            html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
-            if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
           }
+          html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
+          if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
           body.innerHTML = html;
         } else {
           body.innerHTML = "<p>لا يوجد طلبات</p>";
         }
       });
 
-      // أزرار إرسال لعامل
       const assignDiv = document.getElementById("assign-buttons");
       assignDiv.innerHTML = "";
       for (let i = 1; i <= 5; i++) {
@@ -205,7 +186,6 @@
       closeModal();
     }
 
-    // عداد العمال
     const countersEls = {
       barista1: document.getElementById("b1c"),
       barista2: document.getElementById("b2c"),
@@ -236,7 +216,6 @@
       });
     });
 
-    // الأزرار أسفل الصفحة
     function clearAllOrders() {
       if (!confirm("هل أنت متأكد من مسح كل الطلبات؟")) return;
       remove(ref(db, "orders"))
