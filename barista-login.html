@@ -1,52 +1,71 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>تسجيل دخول العمال</title>
+  <meta charset="UTF-8" />
+  <title>تسجيل دخول العامل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Tahoma, sans-serif; text-align: center; background: #f0f0f0; }
-    .login-box {
-      background: white; padding: 20px; margin: 100px auto; width: 300px;
-      border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
-    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .error { color: red; margin-top: 10px; }
+    body{font-family:Tahoma,Arial,sans-serif;background:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+    .box{background:#fff;padding:22px 20px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);width:320px;text-align:center}
+    h2{margin:0 0 14px}
+    input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:6px;font-size:14px;box-sizing:border-box}
+    button{width:100%;padding:11px;border:0;border-radius:6px;background:#4CAF50;color:#fff;font-size:16px;cursor:pointer}
+    button:hover{background:#3ea047}
+    .err{margin-top:8px;color:#d00;font-weight:bold;min-height:18px}
   </style>
 </head>
 <body>
-
-  <div class="login-box">
+  <div class="box">
     <h2>🔑 دخول العامل</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()">تسجيل دخول</button>
-    <div class="error" id="error"></div>
+    <form id="loginForm">
+      <input id="username" placeholder="اسم المستخدم (barista1 … barista5)" autocomplete="username" />
+      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+      <button type="submit">تسجيل دخول</button>
+      <div class="err" id="err"></div>
+    </form>
   </div>
 
   <script>
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+    (function () {
+      const form = document.getElementById('loginForm');
+      const uEl = document.getElementById('username');
+      const pEl = document.getElementById('password');
+      const err = document.getElementById('err');
 
-      // بيانات الدخول (ممكن تغيرها)
-      const accounts = {
-        "barista1": "1111",
-        "barista2": "2222",
-        "barista3": "3333",
-        "barista4": "4444",
-        "barista5": "5555"
+      // حسابات بسيطة داخل الصفحة (غير مرتبطة بفايربيز)
+      const ACCOUNTS = {
+        barista1: '1111',
+        barista2: '2222',
+        barista3: '3333',
+        barista4: '4444',
+        barista5: '5555'
       };
 
-      if (accounts[user] && accounts[user] === pass) {
-        // ✅ تحويل للوحة الخاصة بالعامل
-        window.location.href = `barista.html?id=${user}`;
-      } else {
-        document.getElementById("error").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
-      }
-    }
-  </script>
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        err.textContent = '';
 
+        const user = (uEl.value || '').trim();
+        const pass = (pEl.value || '').trim();
+
+        if (!user || !pass) {
+          err.textContent = '❌ من فضلك أدخل اسم المستخدم وكلمة المرور';
+          return;
+        }
+
+        if (!ACCOUNTS[user] || ACCOUNTS[user] !== pass) {
+          err.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+          return;
+        }
+
+        // نحسب رابط barista.html الصحيح داخل نفس المجلد (يدعم GitHub Pages)
+        const target = new URL('barista.html', window.location.href);
+        target.searchParams.set('id', user);
+
+        // تحويل
+        window.location.href = target.toString();
+      });
+    })();
+  </script>
 </body>
 </html>
