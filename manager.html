@@ -1,81 +1,82 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>لوحة المدير</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- أيقونة شخص -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: Tahoma, Arial, sans-serif; background:#f9f9f9; text-align:center; }
-    h1 { margin:20px; color:#333; }
+    body { font-family: Tahoma, Arial, sans-serif; background:#f9f9f9; text-align:center; margin:0; padding:20px; }
+    h1 { margin:10px 0 20px; color:#333; }
 
-    /* 🔹 شريط العمال */
-    .baristas { display:flex; justify-content:center; gap:25px; margin-bottom:25px; }
-    .barista-icon {
-      text-align:center; font-size:18px;
-    }
-    .barista-icon i {
-      font-size:32px; display:block; margin-bottom:5px; color:seagreen;
-    }
+    /* شريط العمال */
+    .baristas { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:18px; }
+    .barista-icon { font-size:16px; }
+    .barista-icon i { font-size:28px; display:block; margin-bottom:6px; color:seagreen; }
+    .busy i { color:crimson; }
 
-    /* 🔹 شبكة الطاولات */
+    /* شبكة الطاولات (أزرار دائرية) */
     .grid {
       display:grid;
       grid-template-columns:repeat(3, 1fr);
       gap:20px;
       width:90%;
-      margin:auto;
+      margin:0 auto 20px;
     }
     .table-btn {
       width:120px; height:120px;
-      border:none;
-      border-radius:50%; /* ✅ دائرية */
-      cursor:pointer;
-      font-size:18px; font-weight:bold;
-      color:#fff;
+      border:none; border-radius:50%;
+      cursor:pointer; font-size:18px; font-weight:bold; color:#fff;
     }
     .gray { background:gray; }
     .red { background:crimson; }
-    .yellow { background:goldenrod; color:black; }
+    .yellow { background:goldenrod; color:#000; }
     .blue { background:royalblue; }
     .green { background:seagreen; }
 
-    /* 🔹 المودال */
+    /* المودال */
     .modal {
-      display:none; position:fixed; top:0; left:0;
-      width:100%; height:100%;
+      display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.5);
-      justify-content:center; align-items:center;
+      justify-content:center; align-items:center; padding:12px;
     }
     .modal-content {
-      background:#fff; padding:20px; border-radius:10px; width:350px; text-align:right;
+      background:#fff; padding:16px 16px 10px; border-radius:10px; width:360px; text-align:right;
     }
-    .modal-content h2 { margin-top:0; }
-    .close-btn, .assign-btn {
-      padding:8px 14px; border:none; border-radius:6px;
-      cursor:pointer; margin:5px 0; color:#fff;
+    .modal-content h2 { margin:0 0 10px; }
+    .assign-btn, .close-btn {
+      padding:8px 14px; border:none; border-radius:6px; cursor:pointer; color:#fff; margin:4px 0;
     }
-    .close-btn { background:darkred; }
     .assign-btn { background:seagreen; display:block; width:100%; }
+    .close-btn { background:darkred; }
+
+    /* أزرار أسفل الصفحة */
+    .footer-buttons { display:flex; justify-content:center; gap:14px; margin-top:8px; flex-wrap:wrap; }
+    .footer-buttons button {
+      padding:10px 16px; border:none; border-radius:8px; color:#fff; font-size:16px; cursor:pointer;
+    }
+    .clear-btn { background:darkred; }
+    .workers-btn { background:#0a7b5f; }
   </style>
 </head>
 <body>
 
   <h1>☕ لوحة المدير - إدارة الطلبات</h1>
 
-  <!-- 🔹 شريط العمال -->
+  <!-- شريط العمال مع عدّاد -->
   <div class="baristas">
-    <div class="barista-icon" id="barista1-status"><i class="fa-solid fa-user"></i> Barista 1</div>
-    <div class="barista-icon" id="barista2-status"><i class="fa-solid fa-user"></i> Barista 2</div>
-    <div class="barista-icon" id="barista3-status"><i class="fa-solid fa-user"></i> Barista 3</div>
-    <div class="barista-icon" id="barista4-status"><i class="fa-solid fa-user"></i> Barista 4</div>
-    <div class="barista-icon" id="barista5-status"><i class="fa-solid fa-user"></i> Barista 5</div>
+    <div class="barista-icon" id="barista1-status"><i class="fa-solid fa-user"></i> Barista 1 (<span id="b1c">0</span>)</div>
+    <div class="barista-icon" id="barista2-status"><i class="fa-solid fa-user"></i> Barista 2 (<span id="b2c">0</span>)</div>
+    <div class="barista-icon" id="barista3-status"><i class="fa-solid fa-user"></i> Barista 3 (<span id="b3c">0</span>)</div>
+    <div class="barista-icon" id="barista4-status"><i class="fa-solid fa-user"></i> Barista 4 (<span id="b4c">0</span>)</div>
+    <div class="barista-icon" id="barista5-status"><i class="fa-solid fa-user"></i> Barista 5 (<span id="b5c">0</span>)</div>
   </div>
 
-  <!-- 🔹 شبكة الطاولات -->
+  <!-- شبكة الطاولات -->
   <div class="grid" id="tables-grid"></div>
 
-  <!-- 🔹 المودال -->
+  <!-- المودال -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <h2 id="modal-title">تفاصيل الطاولة</h2>
@@ -86,10 +87,17 @@
     </div>
   </div>
 
+  <!-- أزرار أسفل الصفحة -->
+  <div class="footer-buttons">
+    <button class="clear-btn" onclick="clearAllOrders()">🗑️ تصفير كل الطلبات</button>
+    <button class="workers-btn" onclick="goToWorkers()">👥 لوحة العمال</button>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
+    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -105,12 +113,12 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // 🔹 إنشاء الطاولات
+    // إنشاء أزرار الطاولات
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
-      btn.innerText = "طاولة " + i;
-      btn.onclick = () => openModal(i);
+      btn.textContent = "طاولة " + i;
+      btn.addEventListener("click", () => openModal(i));
       grid.appendChild(btn);
 
       const tableRef = ref(db, "orders/table" + i);
@@ -128,17 +136,17 @@
       switch (status) {
         case "قيد التنفيذ": btn.classList.add("red"); break;
         case "قيد التحضير": btn.classList.add("yellow"); break;
-        case "طلب حساب": btn.classList.add("blue"); break;
-        case "منتهي": btn.classList.add("green"); break;
-        default: btn.classList.add("gray");
+        case "طلب حساب":   btn.classList.add("blue"); break;
+        case "منتهي":       btn.classList.add("green"); break;
+        default:            btn.classList.add("gray");
       }
     }
 
-    // 🔹 فتح المودال
+    // فتح المودال
     function openModal(tableNumber) {
       currentTable = tableNumber;
       document.getElementById("modal").style.display = "flex";
-      document.getElementById("modal-title").innerText = "تفاصيل الطاولة " + tableNumber;
+      document.getElementById("modal-title").textContent = "تفاصيل الطاولة " + tableNumber;
 
       const body = document.getElementById("modal-body");
       const tableRef = ref(db, "orders/table" + tableNumber);
@@ -146,7 +154,7 @@
         if (snapshot.exists()) {
           const data = snapshot.val();
           let html = `<h3>الحالة: ${data.status || "غير محدد"}</h3>`;
-          if (data.order) {
+          if (Array.isArray(data.order) && data.order.length) {
             html += "<ul>";
             data.order.forEach(item => {
               html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
@@ -161,24 +169,19 @@
         }
       });
 
-      // 🔹 زر إرسال للعامل
+      // أزرار إرسال لعامل
       const assignDiv = document.getElementById("assign-buttons");
       assignDiv.innerHTML = "";
       for (let i = 1; i <= 5; i++) {
-        const btn = document.createElement("button");
-        btn.className = "assign-btn";
-        btn.textContent = "إرسال إلى Barista " + i;
-        btn.onclick = () => assignOrder("barista" + i);
-        assignDiv.appendChild(btn);
+        const b = document.createElement("button");
+        b.className = "assign-btn";
+        b.textContent = "إرسال إلى Barista " + i;
+        b.onclick = () => assignOrder("barista" + i);
+        assignDiv.appendChild(b);
       }
     }
+    window.closeModal = () => document.getElementById("modal").style.display = "none";
 
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
-    window.closeModal = closeModal;
-
-    // 🔹 إرسال الطلب لعامل
     function assignOrder(baristaId) {
       if (!currentTable) return;
       update(ref(db, "orders/table" + currentTable), {
@@ -187,6 +190,50 @@
       });
       closeModal();
     }
+
+    // عداد العمال
+    const countersEls = {
+      barista1: document.getElementById("b1c"),
+      barista2: document.getElementById("b2c"),
+      barista3: document.getElementById("b3c"),
+      barista4: document.getElementById("b4c"),
+      barista5: document.getElementById("b5c"),
+    };
+    const statusEls = {
+      barista1: document.getElementById("barista1-status"),
+      barista2: document.getElementById("barista2-status"),
+      barista3: document.getElementById("barista3-status"),
+      barista4: document.getElementById("barista4-status"),
+      barista5: document.getElementById("barista5-status"),
+    };
+
+    const ordersRef = ref(db, "orders");
+    onValue(ordersRef, (snapshot) => {
+      const counts = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
+      if (snapshot.exists()) {
+        snapshot.forEach((child) => {
+          const d = child.val();
+          if (d.assignedTo && counts.hasOwnProperty(d.assignedTo)) counts[d.assignedTo]++;
+        });
+      }
+      Object.keys(counts).forEach(k => {
+        countersEls[k].textContent = counts[k];
+        statusEls[k].classList.toggle("busy", counts[k] > 0);
+      });
+    });
+
+    // الأزرار أسفل الصفحة
+    function clearAllOrders() {
+      if (!confirm("هل أنت متأكد من مسح كل الطلبات؟")) return;
+      remove(ref(db, "orders"))
+        .then(() => alert("✅ تم مسح جميع الطلبات"))
+        .catch(err => console.error("خطأ أثناء المسح:", err));
+    }
+    function goToWorkers() {
+      window.location.href = "baristas-dashboard.html";
+    }
+    window.clearAllOrders = clearAllOrders;
+    window.goToWorkers = goToWorkers;
   </script>
 </body>
 </html>
