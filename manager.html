@@ -154,15 +154,29 @@
         if (snapshot.exists()) {
           const data = snapshot.val();
           let html = `<h3>الحالة: ${data.status || "غير محدد"}</h3>`;
-          if (Array.isArray(data.order) && data.order.length) {
+
+          // ✅ دعم orderHistory لو موجود
+          if (Array.isArray(data.orderHistory) && data.orderHistory.length) {
+            data.orderHistory.forEach((ord, idx) => {
+              html += `<h4>الطلب ${idx+1}:</h4><ul>`;
+              ord.order.forEach(item => {
+                html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
+              });
+              html += `</ul><p><b>الإجمالي:</b> ${ord.total} جنيه</p>`;
+              if (ord.notes) html += `<p><b>ملاحظات:</b> ${ord.notes}</p>`;
+              html += "<hr/>";
+            });
+          } 
+          // أو الطلبات العادية (لو ما فيش orderHistory)
+          else if (Array.isArray(data.order) && data.order.length) {
             html += "<ul>";
             data.order.forEach(item => {
               html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
             });
             html += "</ul>";
+            html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
+            if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
           }
-          html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
-          if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
           body.innerHTML = html;
         } else {
           body.innerHTML = "<p>لا يوجد طلبات</p>";
