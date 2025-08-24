@@ -23,7 +23,7 @@
       height: 120px;
       font-size: 20px;
       border: none;
-      border-radius: 50%; /* ✅ دائرية */
+      border-radius: 50%;
       cursor: pointer;
       color: white;
       font-weight: bold;
@@ -45,10 +45,10 @@
       background: #fff;
       padding: 20px;
       border-radius: 10px;
-      width: 350px;
-      text-align: center;
+      width: 400px;
       max-height: 80vh;
       overflow-y: auto;
+      text-align: right;
     }
     .close-btn, .send-btn {
       background: crimson; color: white;
@@ -73,6 +73,13 @@
     }
     .clear-btn { background: darkred; }
     .buffet-btn { background: darkblue; }
+    .order-box {
+      border: 1px solid #ccc;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 6px;
+      background: #fafafa;
+    }
   </style>
 </head>
 <body>
@@ -116,7 +123,7 @@
 
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
-    let lastOrderKeys = {}; // نخزن آخر طلب لكل طاولة
+    let lastOrderKey = null;
 
     // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
@@ -127,22 +134,15 @@
       btn.addEventListener("click", () => handleClick(btn, i));
       grid.appendChild(btn);
 
-      // راقب بيانات كل طاولة
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
-          let lastKey = null;
-          let lastData = null;
-
-          snapshot.forEach(child => {
-            lastKey = child.key;
-            lastData = child.val();
+          let lastStatus = "";
+          snapshot.forEach(orderSnap => {
+            lastStatus = orderSnap.val().status; // آخر طلب
+            lastOrderKey = orderSnap.key;
           });
-
-          if (lastKey && lastData) {
-            lastOrderKeys[i] = lastKey;
-            updateButtonColor(btn, lastData.status);
-          }
+          updateButtonColor(btn, lastStatus);
         } else {
           btn.className = "table-btn gray";
         }
@@ -162,15 +162,7 @@
 
     function handleClick(btn, tableNumber) {
       currentTable = tableNumber;
-
-      if (btn.classList.contains("red") || btn.classList.contains("yellow")) {
-        openModal(tableNumber);
-      } else if (btn.classList.contains("blue") || btn.classList.contains("green")) {
-        const key = lastOrderKeys[tableNumber];
-        if (key) {
-          set(ref(db, `orders/table${tableNumber}/${key}/status`), "");
-        }
-      }
+      openModal(tableNumber);
     }
 
     function openModal(tableNumber) {
@@ -182,17 +174,14 @@
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
           let html = "";
-          snapshot.forEach(child => {
-            const data = child.val();
-            html += `<div style="border:1px solid #ccc; margin:6px; padding:6px; text-align:right">`;
-            html += `<h4>الحالة: ${data.status || "غير محدد"} ${data.time ? "- " + data.time : ""}</h4>`;
-            if (data.order) {
-              html += "<ul>";
-              data.order.forEach(item => {
-                html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
-              });
-              html += "</ul>";
-            }
+          snapshot.forEach(orderSnap => {
+            const data = orderSnap.val();
+            html += `<div class="order-box">`;
+            html += `<p><b>الحالة:</b> ${data.status || "غير محدد"}</p><ul>`;
+            data.order.forEach(item => {
+              html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
+            });
+            html += `</ul>`;
             html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
             if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
             html += `</div>`;
@@ -210,27 +199,26 @@
     window.closeModal = closeModal;
 
     function sendToKitchen() {
-      if (currentTable) {
-        const key = lastOrderKeys[currentTable];
-        if (key) {
-          set(ref(db, `orders/table${currentTable}/${key}/status`), "قيد التحضير");
-          closeModal();
-        }
+      if (currentTable && lastOrderKey) {
+        set(ref(db, `orders/table${currentTable}/${lastOrderKey}/status`), "قيد التحضير");
+        closeModal();
       }
     }
     window.sendToKitchen = sendToKitchen;
 
-    // زرار تصفير الطلبات
     function clearAllOrders() {
       if (confirm("هل أنت متأكد من مسح كل الطلبات؟")) {
         remove(ref(db, "orders"))
-          .then(() => alert("✅ تم مسح جميع الطلبات"))
-          .catch((error) => console.error("❌ خطأ أثناء المسح:", error));
+          .then(() => {
+            alert("✅ تم مسح جميع الطلبات وإعادة الطاولات للوضع الافتراضي");
+          })
+          .catch((error) => {
+            console.error("❌ خطأ أثناء المسح:", error);
+          });
       }
     }
     window.clearAllOrders = clearAllOrders;
 
-    // زرار لوحة البوفيه
     function goToBuffet() {
       window.location.href = "buffet.html";
     }
