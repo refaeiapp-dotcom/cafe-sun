@@ -11,6 +11,31 @@
       background-color: #f9f9f9;
     }
     h1 { color: #b5651d; margin-bottom: 20px; }
+
+    /* 🔹 صف العمال */
+    #baristas-status {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .barista {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      cursor: default;
+    }
+    .available { background-color: gray; }
+    .busy { background-color: orange; }
+
+    /* 🔹 شبكة الطاولات */
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -33,6 +58,8 @@
     .yellow { background-color: goldenrod; }
     .blue { background-color: royalblue; }
     .green { background-color: green; }
+
+    /* 🔹 نافذة التفاصيل */
     .modal {
       display: none;
       position: fixed;
@@ -80,32 +107,63 @@
       border-radius: 6px;
       background: #fafafa;
     }
+    .barista-buttons {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .barista-buttons button {
+      padding: 6px 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      background: teal;
+    }
   </style>
 </head>
 <body>
 
   <h1>لوحة المدير - مقهى الشمس ☕</h1>
 
+  <!-- 🔹 حالة عمال المقهى -->
+  <div id="baristas-status">
+    <div class="barista available" id="barista1">👤 B1</div>
+    <div class="barista available" id="barista2">👤 B2</div>
+    <div class="barista available" id="barista3">👤 B3</div>
+    <div class="barista available" id="barista4">👤 B4</div>
+    <div class="barista available" id="barista5">👤 B5</div>
+  </div>
+
   <div class="grid" id="tables-grid"></div>
 
-  <!-- أزرار التحكم أسفل الصفحة -->
+  <!-- أزرار التحكم -->
   <div class="footer-buttons">
     <button class="clear-btn" onclick="clearAllOrders()">🗑️ تصفير كل الطلبات</button>
-    <button class="buffet-btn" onclick="goToBuffet()">🍽️ لوحة البوفيه</button>
+    <button class="buffet-btn" onclick="goToBarista()">👤 لوحة Barista</button>
   </div>
 
   <div id="modal" class="modal">
     <div class="modal-content">
       <h2 id="modal-title">تفاصيل الطاولة</h2>
       <div id="modal-body">لا يوجد بيانات</div>
-      <button class="send-btn" onclick="sendToKitchen()">إرسال للبوفيه</button>
+      <div class="barista-buttons">
+        <button onclick="sendToBarista('barista1')">👤 B1</button>
+        <button onclick="sendToBarista('barista2')">👤 B2</button>
+        <button onclick="sendToBarista('barista3')">👤 B3</button>
+        <button onclick="sendToBarista('barista4')">👤 B4</button>
+        <button onclick="sendToBarista('barista5')">👤 B5</button>
+      </div>
       <button class="close-btn" onclick="closeModal()">إغلاق</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     // بيانات فايربيز
     const firebaseConfig = {
@@ -125,7 +183,20 @@
     let currentTable = null;
     let lastOrderKey = null;
 
-    // إنشاء الأزرار
+    // 🔹 مراقبة حالة الـ 5 عمال
+    ["barista1","barista2","barista3","barista4","barista5"].forEach(b => {
+      const bRef = ref(db, "baristas/" + b + "/status");
+      onValue(bRef, (snap) => {
+        const el = document.getElementById(b);
+        if (snap.exists() && snap.val() === "busy") {
+          el.className = "barista busy";
+        } else {
+          el.className = "barista available";
+        }
+      });
+    });
+
+    // 🔹 إنشاء الأزرار للطاولات
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
@@ -139,7 +210,7 @@
         if (snapshot.exists()) {
           let lastStatus = "";
           snapshot.forEach(orderSnap => {
-            lastStatus = orderSnap.val().status; // آخر طلب
+            lastStatus = orderSnap.val().status;
             lastOrderKey = orderSnap.key;
           });
           updateButtonColor(btn, lastStatus);
@@ -179,7 +250,7 @@
             html += `<div class="order-box">`;
             html += `<p><b>الحالة:</b> ${data.status || "غير محدد"}</p><ul>`;
             data.order.forEach(item => {
-              html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
+              html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
             });
             html += `</ul>`;
             html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
@@ -198,31 +269,33 @@
     }
     window.closeModal = closeModal;
 
-    function sendToKitchen() {
+    // 🔹 إرسال الطلب لعامل محدد
+    function sendToBarista(barista) {
       if (currentTable && lastOrderKey) {
-        set(ref(db, `orders/table${currentTable}/${lastOrderKey}/status`), "قيد التحضير");
+        update(ref(db, `orders/table${currentTable}/${lastOrderKey}`), { status: "قيد التحضير" });
+        set(ref(db, `baristas/${barista}/orders/table${currentTable}/${lastOrderKey}`), {
+          status: "قيد التحضير",
+          fromTable: currentTable
+        });
+        set(ref(db, `baristas/${barista}/status`), "busy");
         closeModal();
       }
     }
-    window.sendToKitchen = sendToKitchen;
+    window.sendToBarista = sendToBarista;
 
     function clearAllOrders() {
       if (confirm("هل أنت متأكد من مسح كل الطلبات؟")) {
-        remove(ref(db, "orders"))
-          .then(() => {
-            alert("✅ تم مسح جميع الطلبات وإعادة الطاولات للوضع الافتراضي");
-          })
-          .catch((error) => {
-            console.error("❌ خطأ أثناء المسح:", error);
-          });
+        remove(ref(db, "orders"));
+        remove(ref(db, "baristas"));
+        alert("✅ تم مسح جميع الطلبات وإعادة الطاولات والعمال للوضع الافتراضي");
       }
     }
     window.clearAllOrders = clearAllOrders;
 
-    function goToBuffet() {
-      window.location.href = "buffet.html";
+    function goToBarista() {
+      window.location.href = "barista.html";
     }
-    window.goToBuffet = goToBuffet;
+    window.goToBarista = goToBarista;
   </script>
 </body>
 </html>
