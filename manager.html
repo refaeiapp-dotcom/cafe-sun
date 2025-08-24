@@ -47,6 +47,8 @@
       border-radius: 10px;
       width: 350px;
       text-align: center;
+      max-height: 80vh;
+      overflow-y: auto;
     }
     .close-btn, .send-btn {
       background: crimson; color: white;
@@ -114,6 +116,7 @@
 
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
+    let lastOrderKeys = {}; // نخزن آخر طلب لكل طاولة
 
     // إنشاء الأزرار
     for (let i = 1; i <= 21; i++) {
@@ -128,8 +131,18 @@
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
-          const data = snapshot.val();
-          updateButtonColor(btn, data.status);
+          let lastKey = null;
+          let lastData = null;
+
+          snapshot.forEach(child => {
+            lastKey = child.key;
+            lastData = child.val();
+          });
+
+          if (lastKey && lastData) {
+            lastOrderKeys[i] = lastKey;
+            updateButtonColor(btn, lastData.status);
+          }
         } else {
           btn.className = "table-btn gray";
         }
@@ -137,7 +150,7 @@
     }
 
     function updateButtonColor(btn, status) {
-      btn.className = "table-btn"; // reset
+      btn.className = "table-btn";
       switch(status) {
         case "قيد التنفيذ": btn.classList.add("red"); break;
         case "قيد التحضير": btn.classList.add("yellow"); break;
@@ -152,10 +165,11 @@
 
       if (btn.classList.contains("red") || btn.classList.contains("yellow")) {
         openModal(tableNumber);
-      } 
-      else if (btn.classList.contains("blue") || btn.classList.contains("green")) {
-        // أزرق أو أخضر → يرجع رمادي
-        set(ref(db, "orders/table" + tableNumber + "/status"), "");
+      } else if (btn.classList.contains("blue") || btn.classList.contains("green")) {
+        const key = lastOrderKeys[tableNumber];
+        if (key) {
+          set(ref(db, `orders/table${tableNumber}/${key}/status`), "");
+        }
       }
     }
 
@@ -167,17 +181,22 @@
       const tableRef = ref(db, "orders/table" + tableNumber);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
-          const data = snapshot.val();
-          let html = "<h3>الحالة: " + (data.status || "غير محدد") + "</h3>";
-          if (data.order) {
-            html += "<ul style='text-align:right'>";
-            data.order.forEach(item => {
-              html += `<li>${item.name} × ${item.qty} (${item.price}ج) = ${item.qty * item.price}ج</li>`;
-            });
-            html += "</ul>";
-          }
-          html += "<p><b>الإجمالي:</b> " + (data.total || 0) + " جنيه</p>";
-          if (data.notes) html += "<p><b>ملاحظات:</b> " + data.notes + "</p>";
+          let html = "";
+          snapshot.forEach(child => {
+            const data = child.val();
+            html += `<div style="border:1px solid #ccc; margin:6px; padding:6px; text-align:right">`;
+            html += `<h4>الحالة: ${data.status || "غير محدد"} ${data.time ? "- " + data.time : ""}</h4>`;
+            if (data.order) {
+              html += "<ul>";
+              data.order.forEach(item => {
+                html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
+              });
+              html += "</ul>";
+            }
+            html += `<p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
+            if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
+            html += `</div>`;
+          });
           document.getElementById("modal-body").innerHTML = html;
         } else {
           document.getElementById("modal-body").innerHTML = "<p>لا يوجد طلبات</p>";
@@ -192,8 +211,11 @@
 
     function sendToKitchen() {
       if (currentTable) {
-        set(ref(db, "orders/table" + currentTable + "/status"), "قيد التحضير");
-        closeModal();
+        const key = lastOrderKeys[currentTable];
+        if (key) {
+          set(ref(db, `orders/table${currentTable}/${key}/status`), "قيد التحضير");
+          closeModal();
+        }
       }
     }
     window.sendToKitchen = sendToKitchen;
@@ -202,19 +224,15 @@
     function clearAllOrders() {
       if (confirm("هل أنت متأكد من مسح كل الطلبات؟")) {
         remove(ref(db, "orders"))
-          .then(() => {
-            alert("✅ تم مسح جميع الطلبات وإعادة الطاولات للوضع الافتراضي");
-          })
-          .catch((error) => {
-            console.error("❌ خطأ أثناء المسح:", error);
-          });
+          .then(() => alert("✅ تم مسح جميع الطلبات"))
+          .catch((error) => console.error("❌ خطأ أثناء المسح:", error));
       }
     }
     window.clearAllOrders = clearAllOrders;
 
     // زرار لوحة البوفيه
     function goToBuffet() {
-      window.location.href = "buffet.html"; // ✅ غير الرابط حسب اسم صفحة البوفيه
+      window.location.href = "buffet.html";
     }
     window.goToBuffet = goToBuffet;
   </script>
