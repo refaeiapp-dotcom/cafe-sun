@@ -4,106 +4,49 @@
   <meta charset="UTF-8">
   <title>تسجيل دخول العمال</title>
   <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+    body { font-family: Tahoma, sans-serif; text-align: center; background: #f0f0f0; }
     .login-box {
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      text-align: center;
-      width: 300px;
+      background: white; padding: 20px; margin: 100px auto; width: 300px;
+      border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
-    h2 { margin-bottom: 20px; color: #333; }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      background: seagreen;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover { background: darkgreen; }
-    #message {
-      margin-top: 10px;
-      font-size: 14px;
-      color: red;
-    }
+    input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
+
   <div class="login-box">
-    <h2>👤 دخول عامل المقهى</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم (مثال: barista1)">
+    <h2>🔑 دخول العامل</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم">
     <input type="password" id="password" placeholder="كلمة المرور">
-    <button id="loginBtn">دخول</button>
-    <div id="message"></div>
+    <button onclick="login()">تسجيل دخول</button>
+    <div class="error" id="error"></div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+  <script>
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
 
-    // بيانات Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
-      authDomain: "my-restaurant-aba99.firebaseapp.com",
-      projectId: "my-restaurant-aba99",
-      storageBucket: "my-restaurant-aba99.appspot.com",
-      messagingSenderId: "512969391867",
-      appId: "1:512969391867:web:36a528665b3469871a3a5e",
-      databaseURL: "https://my-restaurant-aba99-default-rtdb.firebaseio.com/"
-    };
+      // بيانات الدخول (ممكن تغيرها)
+      const accounts = {
+        "barista1": "1111",
+        "barista2": "2222",
+        "barista3": "3333",
+        "barista4": "4444",
+        "barista5": "5555"
+      };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const loginBtn = document.getElementById("loginBtn");
-    const msg = document.getElementById("message");
-
-    loginBtn.addEventListener("click", async () => {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!username || !password) {
-        msg.textContent = "❌ من فضلك أدخل اسم المستخدم وكلمة المرور";
-        return;
+      if (accounts[user] && accounts[user] === pass) {
+        // ✅ تحويل للوحة الخاصة بالعامل
+        window.location.href = `barista.html?id=${user}`;
+      } else {
+        document.getElementById("error").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
       }
-
-      try {
-        const snapshot = await get(child(ref(db), "baristaUsers/" + username));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          if (data.password === password) {
-            // ✅ تسجيل دخول ناجح
-            window.location.href = "barista.html?id=" + username;
-          } else {
-            msg.textContent = "❌ كلمة المرور غير صحيحة";
-          }
-        } else {
-          msg.textContent = "❌ المستخدم غير موجود";
-        }
-      } catch (error) {
-        msg.textContent = "⚠️ خطأ في الاتصال";
-        console.error(error);
-      }
-    });
+    }
   </script>
+
 </body>
 </html>
