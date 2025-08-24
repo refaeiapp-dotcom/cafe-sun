@@ -57,7 +57,7 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, set, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, set, push, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
@@ -120,6 +120,8 @@
     const tableNumber = urlParams.get("table") || "غير محدد";
     document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
 
+    const ordersRef = ref(db, "orders/table" + tableNumber);
+
     // إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
@@ -136,7 +138,7 @@
       }
 
       // 🔹 إنشاء طلب جديد تحت الطاولة
-      const newOrderRef = push(ref(db, "orders/table" + tableNumber));
+      const newOrderRef = push(ordersRef);
       set(newOrderRef, {
         status: "قيد التنفيذ",
         table: tableNumber,
@@ -152,9 +154,32 @@
     });
 
     // طلب الحساب
-    document.getElementById("billBtn").addEventListener("click", () => {
-      update(ref(db, "orders/table" + tableNumber), { status: "طلب حساب" });
-      document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
+    document.getElementById("billBtn").addEventListener("click", async () => {
+      const snapshot = await get(ordersRef);
+      if (snapshot.exists()) {
+        let grandTotal = 0;
+        let allOrdersHtml = "<h3>ملخص الحساب:</h3>";
+
+        snapshot.forEach(orderSnap => {
+          const data = orderSnap.val();
+          grandTotal += parseInt(data.total) || 0;
+
+          allOrdersHtml += `<div class="order-box">`;
+          allOrdersHtml += `<b>الحالة:</b> ${data.status}<ul>`;
+          data.order.forEach(item => {
+            allOrdersHtml += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
+          });
+          allOrdersHtml += `</ul><p><b>إجمالي هذا الطلب:</b> ${data.total} جنيه</p>`;
+          allOrdersHtml += `</div>`;
+        });
+
+        allOrdersHtml += `<h3 style="color:blue">💳 المجموع الكلي: ${grandTotal} جنيه</h3>`;
+        document.getElementById("myOrders").innerHTML = allOrdersHtml;
+
+        // تحديث الحالة إلى "طلب حساب"
+        update(ordersRef, { status: "طلب حساب" });
+        document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
+      }
     });
 
     // تصفير الكميات
@@ -166,8 +191,7 @@
       totalPriceEl.textContent = 0;
     }
 
-    // 🔹 عرض كل الطلبات أسفل اللوحة
-    const ordersRef = ref(db, "orders/table" + tableNumber);
+    // عرض كل الطلبات أسفل اللوحة
     onValue(ordersRef, (snapshot) => {
       const container = document.getElementById("myOrders");
       container.innerHTML = "";
