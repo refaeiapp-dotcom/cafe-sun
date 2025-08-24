@@ -54,6 +54,9 @@
   <h3>طلباتي الحالية:</h3>
   <div id="myOrders"></div>
 
+  <!-- ✅ مكان مخصص لملخص الحساب -->
+  <div id="billSummary"></div>
+
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -122,7 +125,7 @@
 
     const ordersRef = ref(db, "orders/table" + tableNumber);
 
-    // إتمام الطلب
+    // 🔹 إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
@@ -137,7 +140,6 @@
         return;
       }
 
-      // 🔹 إنشاء طلب جديد تحت الطاولة
       const newOrderRef = push(ordersRef);
       set(newOrderRef, {
         status: "قيد التنفيذ",
@@ -150,10 +152,10 @@
       document.getElementById("message").textContent = "✅ تم إرسال الطلب";
       document.getElementById("billBtn").style.display = "block";
 
-      resetQuantities(); // تصفير الكميات بعد الإرسال
+      resetQuantities();
     });
 
-    // طلب الحساب
+    // 🔹 طلب الحساب
     document.getElementById("billBtn").addEventListener("click", async () => {
       const snapshot = await get(ordersRef);
       if (snapshot.exists()) {
@@ -162,27 +164,31 @@
 
         snapshot.forEach(orderSnap => {
           const data = orderSnap.val();
-          grandTotal += parseInt(data.total) || 0;
+          const thisTotal = parseInt(data.total, 10) || 0;
+          grandTotal += thisTotal;
 
           allOrdersHtml += `<div class="order-box">`;
-          allOrdersHtml += `<b>الحالة:</b> ${data.status}<ul>`;
+          allOrdersHtml += `<b>الحالة:</b> ${data.status || ""}<ul>`;
           data.order.forEach(item => {
             allOrdersHtml += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
           });
-          allOrdersHtml += `</ul><p><b>إجمالي هذا الطلب:</b> ${data.total} جنيه</p>`;
+          allOrdersHtml += `</ul><p><b>إجمالي هذا الطلب:</b> ${thisTotal} جنيه</p>`;
           allOrdersHtml += `</div>`;
         });
 
         allOrdersHtml += `<h3 style="color:blue">💳 المجموع الكلي: ${grandTotal} جنيه</h3>`;
-        document.getElementById("myOrders").innerHTML = allOrdersHtml;
 
-        // تحديث الحالة إلى "طلب حساب"
-        update(ordersRef, { status: "طلب حساب" });
+        // ✅ ملخص الحساب يظهر في مكان ثابت
+        document.getElementById("billSummary").innerHTML = allOrdersHtml;
+
+        // ✅ تحديث حالة الطاولة (الأب) إلى "طلب حساب"
+        await update(ordersRef, { status: "طلب حساب" });
+
         document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
       }
     });
 
-    // تصفير الكميات
+    // 🔹 تصفير الكميات
     function resetQuantities() {
       items.forEach((item, index) => {
         document.getElementById(`qty-${index}`).value = 0;
@@ -191,7 +197,7 @@
       totalPriceEl.textContent = 0;
     }
 
-    // عرض كل الطلبات أسفل اللوحة
+    // 🔹 عرض كل الطلبات أسفل اللوحة
     onValue(ordersRef, (snapshot) => {
       const container = document.getElementById("myOrders");
       container.innerHTML = "";
