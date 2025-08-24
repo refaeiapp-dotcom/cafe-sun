@@ -17,21 +17,13 @@
     #orderBtn { background: #4CAF50; color: white; }
     #billBtn { background: #2196F3; color: white; display: none; }
     #message { margin-top: 10px; text-align: center; font-weight: bold; }
-
-    /* عرض الطلبات أسفل الصفحة (قراءة فقط) */
-    .orders-section { margin-top: 18px; }
-    .orders-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .orders-list { display: grid; gap: 10px; }
-    .order-card { background:#fff; border:1px solid #e5e5e5; border-radius:8px; padding:10px; }
-    .order-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-    .badge { padding:2px 8px; border-radius:12px; font-size:12px; }
-    .badge.red { background:#ffe1e1; color:#c62828; }
-    .badge.yellow { background:#fff4ce; color:#8a6d00; }
-    .badge.blue { background:#d9ecff; color:#0d47a1; }
-    .badge.green { background:#dbf5e1; color:#1b5e20; }
-    .order-items { margin:0; padding-right:18px; }
-    .order-total { font-weight:bold; margin-top:6px; }
-    .running-total { margin-top:10px; font-size:16px; font-weight:bold; text-align:center; }
+    .order-box {
+      background: #fff; border: 1px solid #ddd; border-radius: 8px;
+      padding: 10px; margin: 10px 0;
+    }
+    .status-circle {
+      width: 15px; height: 15px; border-radius: 50%; display: inline-block; margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -59,20 +51,13 @@
   <button id="billBtn">طلب الحساب</button>
   <div id="message"></div>
 
-  <!-- قائمة الطلبات الحية (قراءة فقط) -->
-  <div class="orders-section">
-    <div class="orders-header">
-      <h3 style="margin:0">طلبات الطاولة</h3>
-      <small>تتحدث تلقائيًا</small>
-    </div>
-    <div id="ordersList" class="orders-list"></div>
-    <div class="running-total">إجمالي الفاتورة حتى الآن: <span id="runningTotal">0</span> جنيه</div>
-  </div>
+  <h3>طلباتي الحالية:</h3>
+  <div id="myOrders"></div>
 
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, set, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
@@ -87,7 +72,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // القائمة
     const items = [
       { name: "شاي", price: 10 },
       { name: "قهوة", price: 15 },
@@ -123,7 +107,7 @@
     function updateTotal() {
       let total = 0;
       items.forEach((item, index) => {
-        const qty = parseInt(document.getElementById(`qty-${index}`).value) || 0;
+        const qty = parseInt(document.getElementById(`qty-${index}`).value);
         const subtotal = qty * item.price;
         document.getElementById(`subtotal-${index}`).textContent = subtotal;
         total += subtotal;
@@ -136,124 +120,82 @@
     const tableNumber = urlParams.get("table") || "غير محدد";
     document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
 
-    // إرسال الطلب —> يستخدم push (إضافة دون حذف القديم)
+    // إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
-        const qty = parseInt(document.getElementById(`qty-${index}`).value) || 0;
+        const qty = parseInt(document.getElementById(`qty-${index}`).value);
         return qty > 0 ? { name: item.name, price: item.price, qty } : null;
-      }).filter(Boolean);
+      }).filter(x => x);
 
       const notes = document.getElementById("notes").value;
-      const total = Number(totalPriceEl.textContent || 0);
+      const total = totalPriceEl.textContent;
 
       if (order.length === 0) {
         document.getElementById("message").textContent = "الرجاء اختيار صنف واحد على الأقل";
         return;
       }
 
-      const ordersRef = ref(db, "orders/table" + tableNumber);
-      const newRef = push(ordersRef, {
+      // 🔹 إنشاء طلب جديد تحت الطاولة
+      const newOrderRef = push(ref(db, "orders/table" + tableNumber));
+      set(newOrderRef, {
         status: "قيد التنفيذ",
-        color: "red",
         table: tableNumber,
-        order,
-        notes,
-        total,
-        time: new Date().toLocaleString()
+        order: order,
+        notes: notes,
+        total: total
       });
-
-      // حفظ مفتاح آخر طلب لزر الحساب
-      localStorage.setItem("lastOrderKey", newRef.key);
 
       document.getElementById("message").textContent = "✅ تم إرسال الطلب";
       document.getElementById("billBtn").style.display = "block";
+
+      resetQuantities(); // تصفير الكميات بعد الإرسال
     });
 
-    // طلب الحساب —> يحدّث آخر طلب فقط
+    // طلب الحساب
     document.getElementById("billBtn").addEventListener("click", () => {
-      const lastKey = localStorage.getItem("lastOrderKey");
-      if (!lastKey) {
-        document.getElementById("message").textContent = "لا يوجد طلب حديث لإرسال الحساب.";
-        return;
-      }
-      const orderRef = ref(db, `orders/table${tableNumber}/${lastKey}`);
-      update(orderRef, { status: "طلب حساب", color: "blue" });
+      update(ref(db, "orders/table" + tableNumber), { status: "طلب حساب" });
       document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
     });
 
-    // ====== عرض حيّ لطلبات نفس الطاولة (قراءة فقط) ======
-    const ordersList = document.getElementById("ordersList");
-    const runningTotalEl = document.getElementById("runningTotal");
-    const tableRef = ref(db, "orders/table" + tableNumber);
-
-    // بعض الطلبات القديمة قد تكون محفوظة بصيغة "طلب واحد" (قبل التعديل).
-    function toNumber(x){ return typeof x === "number" ? x : parseFloat(x) || 0; }
-    function statusClass(s){
-      switch(s){
-        case "قيد التنفيذ": return "red";
-        case "قيد التحضير": return "yellow";
-        case "طلب حساب": return "blue";
-        case "منتهي": return "green";
-        default: return "yellow";
-      }
+    // تصفير الكميات
+    function resetQuantities() {
+      items.forEach((item, index) => {
+        document.getElementById(`qty-${index}`).value = 0;
+        document.getElementById(`subtotal-${index}`).textContent = 0;
+      });
+      totalPriceEl.textContent = 0;
     }
 
-    function escapeHTML(str){
-      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
+    // 🔹 عرض كل الطلبات أسفل اللوحة
+    const ordersRef = ref(db, "orders/table" + tableNumber);
+    onValue(ordersRef, (snapshot) => {
+      const container = document.getElementById("myOrders");
+      container.innerHTML = "";
+      if (snapshot.exists()) {
+        snapshot.forEach(orderSnap => {
+          const data = orderSnap.val();
+          let color = "gray";
+          if (data.status === "قيد التنفيذ") color = "red";
+          else if (data.status === "قيد التحضير") color = "goldenrod";
+          else if (data.status === "منتهي") color = "green";
 
-    onValue(tableRef, (snapshot) => {
-      ordersList.innerHTML = "";
-      let grandTotal = 0;
-
-      if (!snapshot.exists()) {
-        ordersList.innerHTML = "<div class='order-card'>لا توجد طلبات بعد.</div>";
-        runningTotalEl.textContent = "0";
-        return;
-      }
-
-      const rootVal = snapshot.val();
-
-      // تنسيق قديم (طلب واحد مباشرةً تحت tableX)
-      if (rootVal && Array.isArray(rootVal.order)) {
-        renderOrderCard(rootVal);
-        grandTotal += toNumber(rootVal.total);
+          let html = `<div class="order-box">`;
+          html += `<span class="status-circle" style="background:${color}"></span>`;
+          html += `<b>الحالة:</b> ${data.status || "غير محدد"}`;
+          html += "<ul>";
+          data.order.forEach(item => {
+            html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
+          });
+          html += "</ul>";
+          html += `<p><b>الإجمالي:</b> ${data.total} جنيه</p>`;
+          if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
+          html += `</div>`;
+          container.innerHTML += html;
+        });
       } else {
-        // التنسيق الجديد (push لكل طلب)
-        snapshot.forEach(child => {
-          const data = child.val();
-          renderOrderCard(data);
-          grandTotal += toNumber(data.total);
-        });
+        container.innerHTML = "<p>لا توجد طلبات بعد</p>";
       }
-
-      runningTotalEl.textContent = grandTotal;
     });
-
-    function renderOrderCard(data){
-      const card = document.createElement("div");
-      card.className = "order-card";
-
-      let itemsHtml = "<ul class='order-items'>";
-      if (Array.isArray(data.order)) {
-        data.order.forEach(it => {
-          const line = `${it.name} × ${it.qty} (${it.price}ج) = ${toNumber(it.qty) * toNumber(it.price)}ج`;
-          itemsHtml += `<li>${line}</li>`;
-        });
-      }
-      itemsHtml += "</ul>";
-
-      card.innerHTML = `
-        <div class="order-top">
-          <div>${data.time ? escapeHTML(data.time) : ""}</div>
-          <div class="badge ${statusClass(data.status)}">${data.status || "غير محدد"}</div>
-        </div>
-        ${itemsHtml}
-        ${data.notes ? `<div class="order-notes"><b>ملاحظات:</b> ${escapeHTML(data.notes)}</div>` : ""}
-        <div class="order-total"><b>الإجمالي:</b> ${toNumber(data.total)} جنيه</div>
-      `;
-      ordersList.appendChild(card);
-    }
   </script>
 </body>
 </html>
