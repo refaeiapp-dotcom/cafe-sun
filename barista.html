@@ -85,34 +85,36 @@
     onValue(ordersRef, (snapshot) => {
       ordersDiv.innerHTML = "";
       if (snapshot.exists()) {
-        snapshot.forEach((child) => {
-          const data = child.val();
-          if (data.assignedTo === baristaId) {
-            const div = document.createElement("div");
-            div.className = "order";
+        snapshot.forEach((tableSnap) => {
+          const tableId = tableSnap.key.replace("table", "");
+          tableSnap.forEach((orderSnap) => {
+            const data = orderSnap.val();
+            if (data.assignedTo === baristaId) {
+              const div = document.createElement("div");
+              div.className = "order";
 
-            div.innerHTML = `
-              <h3>🍽️ طاولة ${data.table}</h3>
-              <ul>
-                ${data.order.map(item => `<li>${item.name} × ${item.qty} = ${item.qty * item.price} ج</li>`).join("")}
-              </ul>
-              <p><b>الإجمالي:</b> ${data.total} جنيه</p>
-              ${data.notes ? `<p><b>ملاحظات:</b> ${data.notes}</p>` : ""}
-            `;
+              div.innerHTML = `
+                <h3>🍽️ طاولة ${tableId}</h3>
+                <ul>
+                  ${data.order.map(item => `<li>${item.name} × ${item.qty} = ${item.qty * item.price} ج</li>`).join("")}
+                </ul>
+                <p><b>الإجمالي:</b> ${data.total} جنيه</p>
+                ${data.notes ? `<p><b>ملاحظات:</b> ${data.notes}</p>` : ""}
+              `;
 
-            const btn = document.createElement("button");
-            btn.textContent = "✔️ تم التنفيذ";
-            btn.onclick = () => {
-              update(ref(db, "orders/table" + data.table), {
-                status: "منتهي",
-                color: "green",
-                assignedTo: ""
-              });
-            };
+              const btn = document.createElement("button");
+              btn.textContent = "✔️ تم التنفيذ";
+              btn.onclick = () => {
+                update(ref(db, `orders/table${tableId}/${orderSnap.key}`), {
+                  status: "منتهي",
+                  assignedTo: ""
+                });
+              };
 
-            div.appendChild(btn);
-            ordersDiv.appendChild(div);
-          }
+              div.appendChild(btn);
+              ordersDiv.appendChild(div);
+            }
+          });
         });
       }
     });
