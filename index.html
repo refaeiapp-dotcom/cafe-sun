@@ -30,7 +30,6 @@
   <h2>قائمة الطعام</h2>
   <div id="tableNumber"></div>
 
-  <!-- ✅ جدول الأصناف -->
   <table>
     <thead>
       <tr>
@@ -76,7 +75,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ✅ قائمة الأصناف
     const items = [
       { name: "شاي", price: 10 },
       { name: "قهوة", price: 15 },
@@ -93,7 +91,6 @@
     const menu = document.getElementById("menu");
     const totalPriceEl = document.getElementById("totalPrice");
 
-    // ✅ بناء القائمة
     items.forEach((item, index) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -110,7 +107,6 @@
       document.getElementById(`qty-${index}`).addEventListener("change", updateTotal);
     });
 
-    // ✅ حساب الإجمالي
     function updateTotal() {
       let total = 0;
       items.forEach((item, index) => {
@@ -122,7 +118,7 @@
       totalPriceEl.textContent = total;
     }
 
-    // ✅ رقم الطاولة من الرابط
+    // رقم الطاولة من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const tableNumber = urlParams.get("table") || "غير محدد";
     document.getElementById("tableNumber").textContent = "رقم الطاولة: " + tableNumber;
@@ -165,11 +161,9 @@
       if (snapshot.exists()) {
         let grandTotal = 0;
         let allOrdersHtml = "<h3>ملخص الحساب:</h3>";
-        let lastKey = null;
 
         snapshot.forEach(orderSnap => {
           const data = orderSnap.val();
-          lastKey = orderSnap.key;
           const thisTotal = parseInt(data.total, 10) || 0;
           grandTotal += thisTotal;
 
@@ -183,14 +177,12 @@
         });
 
         allOrdersHtml += `<h3 style="color:blue">💳 المجموع الكلي: ${grandTotal} جنيه</h3>`;
+
+        // ✅ ملخص الحساب يظهر في مكان ثابت
         document.getElementById("billSummary").innerHTML = allOrdersHtml;
 
-        // ✅ تحديث آخر طلب فقط إلى "طلب حساب"
-        if (lastKey) {
-          await update(ref(db, `orders/table${tableNumber}/${lastKey}`), {
-            status: "طلب حساب"
-          });
-        }
+        // ✅ تحديث حالة الطاولة (الأب) إلى "طلب حساب"
+        await update(ordersRef, { status: "طلب حساب" });
 
         document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
       }
@@ -216,7 +208,6 @@
           if (data.status === "قيد التنفيذ") color = "red";
           else if (data.status === "قيد التحضير") color = "goldenrod";
           else if (data.status === "منتهي") color = "green";
-          else if (data.status === "طلب حساب") color = "royalblue";
 
           let html = `<div class="order-box">`;
           html += `<span class="status-circle" style="background:${color}"></span>`;
