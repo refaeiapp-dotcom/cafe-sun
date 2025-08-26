@@ -73,7 +73,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, update, remove, set, get, child } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -91,7 +91,7 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // ✅ نخزن حالة كل طاولة هنا بدل الاعتماد على الـ CSS
+    // نخزن الحالة الفعلية لكل طاولة
     const tableStatus = {}; // { 1: "gray" | "قيد التنفيذ" | "قيد التحضير" | "طلب حساب" | "منتهي" }
 
     // إنشاء الطاولات + الاشتراك على بياناتها
@@ -108,15 +108,15 @@
           let computed = "gray";
           const data = snapshot.val();
 
-          // لو حالة الطاولة العامة = طلب حساب
+          // حالة عامة للطاولة
           if (data && data.status === "طلب حساب") {
             computed = "طلب حساب";
           } else {
-            // ندور على حالة الطلبات الفرعية (نتجاهل مفاتيح ليست كائنات طلب)
-            snapshot.forEach(child => {
-              const v = child.val();
+            // آخر حالة من الطلبات الفرعية (نتجاهل مفاتيح ليست كائنات طلب)
+            snapshot.forEach(childSnap => {
+              const v = childSnap.val();
               if (v && typeof v === "object" && v.status) {
-                computed = v.status; // آخر حالة نلاقيها
+                computed = v.status;
               }
             });
           }
@@ -137,32 +137,47 @@
         case "قيد التحضير": btn.classList.add("yellow"); break;
         case "طلب حساب":   btn.classList.add("blue"); break;
         case "منتهي":       btn.classList.add("green"); break;
-        default:             btn.classList.add("gray");
+        default:            btn.classList.add("gray");
       }
     }
 
-    // ✅ عند الضغط على الطاولة: لو حالتها طلب حساب → نحذف الطلبات ونرجّع رمادي
-    function handleTableClick(tableNumber, btn) {
+    // عند الضغط على الطاولة: لو حالتها "طلب حساب" → ننهي وننظف كل المسارات
+    async function handleTableClick(tableNumber, btn) {
       const statusNow = tableStatus[tableNumber] || "gray";
       if (statusNow === "طلب حساب") {
-        if (confirm(`هل تريد إنهاء وحذف جميع طلبات الطاولة ${tableNumber}؟`)) {
-          // نحذف العقدة كلها لضمان اختفاءها من لوحة العميل أيضًا
-          remove(ref(db, `orders/table${tableNumber}`))
-            .then(() => {
-              // نعيد اللون فورًا، والتحديث اللحظي من onValue هيأكد
-              btn.className = "table-btn gray";
-              tableStatus[tableNumber] = "gray";
-              alert("✅ تم إنهاء الطلبات للطاولة " + tableNumber);
-            })
-            .catch((e) => {
-              console.error(e);
-              alert("حدث خطأ أثناء الحذف");
-            });
+        if (!confirm(`هل تريد إنهاء وحذف جميع طلبات الطاولة ${tableNumber}؟`)) return;
+
+        try {
+          // 1) حذف الطلبات من مسار الطاولة (العميل والمدير بيشتركوا في نفس المسار)
+          await remove(ref(db, `orders/table${tableNumber}`));
+
+          // 2) حذف أي نسخ للطلبات من كل عامل
+          const baristas = ["barista1","barista2","barista3","barista4","barista5"];
+          for (const b of baristas) {
+            await remove(ref(db, `baristas/${b}/orders/table${tableNumber}`));
+          }
+
+          // 3) تحديث حالة كل عامل حسب ما تبقّى عنده من طلبات
+          for (const b of baristas) {
+            const ordersSnap = await get(ref(db, `baristas/${b}/orders`));
+            const hasAnyOrders = ordersSnap.exists();
+            await update(ref(db, `baristas/${b}`), { status: hasAnyOrders ? "busy" : "available" });
+          }
+
+          // 4) إعادة لون زر الطاولة فورًا (والاشتراك سيؤكد ذلك)
+          btn.className = "table-btn gray";
+          tableStatus[tableNumber] = "gray";
+
+          alert("✅ تم إنهاء الطلبات للطاولة " + tableNumber);
+          return;
+        } catch (e) {
+          console.error(e);
+          alert("حدث خطأ أثناء الحذف");
+          return;
         }
-        return;
       }
 
-      // غير ذلك نفتح التفاصيل
+      // غير ذلك: افتح تفاصيل الطاولة
       openModal(tableNumber);
     }
 
@@ -194,7 +209,7 @@
         } else {
           body.innerHTML = "<p>لا يوجد طلبات</p>";
         }
-      }, { onlyOnce: true }); // نتجنب تكرار الاشتراكات كل مرة يفتح المودال
+      }, { onlyOnce: true }); // نتجنب تراكم الاشتراكات
 
       // أزرار الإرسال
       const assignDiv = document.getElementById("assign-buttons");
@@ -218,10 +233,13 @@
             const key = orderSnap.key;
             const data = orderSnap.val();
             if (!data || typeof data !== "object") return; // تجاهل مفاتيح ليست طلبات
-            // تحديث حالة الطلب
+
+            // تحديث حالة الطلب في الطاولة
             update(ref(db, `orders/table${currentTable}/${key}`), { status: "قيد التحضير", assignedTo: baristaId });
-            // نسخه للبارستا
+
+            // نسخ الطلب للعامل
             set(ref(db, `baristas/${baristaId}/orders/table${currentTable}/${key}`), data);
+
             // تحديث حالة العامل
             update(ref(db, `baristas/${baristaId}`), { status: "busy" });
           });
@@ -230,7 +248,7 @@
       closeModal();
     }
 
-    // ✅ تحديث حالة العمال (الأيقونات)
+    // تحديث حالة العمال (الأيقونات)
     ["barista1","barista2","barista3","barista4","barista5"].forEach(b => {
       const bRef = ref(db, "baristas/" + b + "/status");
       onValue(bRef, (snap) => {
@@ -244,11 +262,16 @@
     });
 
     // تصفير كل الطلبات
-    function clearAllOrders() {
+    async function clearAllOrders() {
       if (!confirm("هل أنت متأكد من مسح كل الطلبات؟")) return;
-      remove(ref(db, "orders"));
-      remove(ref(db, "baristas"));
-      alert("✅ تم مسح جميع الطلبات");
+      try {
+        await remove(ref(db, "orders"));
+        await remove(ref(db, "baristas"));
+        alert("✅ تم مسح جميع الطلبات");
+      } catch (e) {
+        console.error(e);
+        alert("حدث خطأ أثناء التصفير");
+      }
     }
     window.clearAllOrders = clearAllOrders;
 
