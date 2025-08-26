@@ -1,76 +1,65 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>لوحة متابعة العمال</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة متابعة العمال (ثابتة مع أرشفة)</title>
   <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f9f9f9;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
-    }
-    .barista {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
-    }
-    .barista h2 {
-      margin: 5px 0 15px;
-      color: darkblue;
-      font-size: 18px;
-    }
-    .order {
-      background: #f1f1f1;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 10px;
-      text-align: right;
-    }
-    .order h3 {
-      margin: 0 0 5px 0;
-    }
-    .status {
-      font-weight: bold;
-      padding: 3px 6px;
-      border-radius: 6px;
-      display: inline-block;
-      margin-top: 5px;
-    }
-    .red { background: crimson; color: white; }
-    .yellow { background: goldenrod; color: black; }
-    .green { background: seagreen; color: white; }
+    body { font-family: Tahoma, Arial, sans-serif; margin: 0; padding: 20px; background: #f7fafc; color: #222; }
+    h1 { text-align: center; margin: 0 0 10px; }
+    .hint { text-align:center; margin: 0 0 20px; color:#555; font-size:14px; }
+
+    .wrap { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 1280px; margin: 0 auto; }
+
+    .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+    .panel h2 { margin: 0 0 10px; font-size: 18px; color:#1f2937; }
+
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .barista { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; }
+    .barista h3 { margin: 0 0 8px; font-size: 16px; color:#0b3b60; }
+
+    .order { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; margin-bottom: 10px; text-align: right; }
+    .order h4 { margin: 0 0 6px; font-size: 15px; }
+    .order ul { margin: 0 0 6px; padding-inline-start: 18px; }
+    .order .meta { font-size: 13px; color: #374151; }
+
+    .status { font-weight: bold; padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 6px; font-size: 12px; }
+    .red { background: crimson; color: #fff; }
+    .yellow { background: goldenrod; color: #111; }
+    .green { background: seagreen; color: #fff; }
+    .blue { background: royalblue; color: #fff; }
+    .gray { background: #9ca3af; color: #fff; }
+
+    .unassigned { background: #fff7ed; border: 1px dashed #f59e0b; border-radius: 10px; padding: 10px; }
   </style>
 </head>
 <body>
-
   <h1>📊 لوحة متابعة العمال</h1>
+  <p class="hint">المصدر: <b>الأرشيف الدائم</b> (workersArchive). يتم نسخ أي طلب يصل إلى المسار <code>orders/</code> تلقائيًا هنا، ولن يتأثر هذا العرض بحذف المدير أو طلب الحساب الأزرق.</p>
 
-  <div class="grid">
-    <div class="barista"><h2 id="title1">👤 Barista 1</h2><div id="barista1"></div></div>
-    <div class="barista"><h2 id="title2">👤 Barista 2</h2><div id="barista2"></div></div>
-    <div class="barista"><h2 id="title3">👤 Barista 3</h2><div id="barista3"></div></div>
-    <div class="barista"><h2 id="title4">👤 Barista 4</h2><div id="barista4"></div></div>
-    <div class="barista"><h2 id="title5">👤 Barista 5</h2><div id="barista5"></div></div>
+  <div class="wrap">
+    <section class="panel">
+      <h2>طلبات غير مُسندة بعد (للمعلومية فقط)</h2>
+      <div id="unassigned" class="unassigned"></div>
+    </section>
+
+    <section class="panel">
+      <h2>الأرشيف الدائم حسب العامل</h2>
+      <div class="grid">
+        <div class="barista"><h3 id="title1">👤 Barista 1 (0)</h3><div id="barista1"></div></div>
+        <div class="barista"><h3 id="title2">👤 Barista 2 (0)</h3><div id="barista2"></div></div>
+        <div class="barista"><h3 id="title3">👤 Barista 3 (0)</h3><div id="barista3"></div></div>
+        <div class="barista"><h3 id="title4">👤 Barista 4 (0)</h3><div id="barista4"></div></div>
+        <div class="barista"><h3 id="title5">👤 Barista 5 (0)</h3><div id="barista5"></div></div>
+      </div>
+    </section>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, onChildAdded, onChildChanged, get, set, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // ✅ إعدادات Firebase
+    // إعدادات Firebase (نفس المشروع)
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -82,59 +71,148 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db  = getDatabase(app);
 
-    // ✅ تحميل الطلبات وتوزيعها حسب assignedTo
-    const ordersRef = ref(db, "orders");
-    onValue(ordersRef, (snapshot) => {
-      // مسح الأعمدة قبل التحديث
-      for (let i = 1; i <= 5; i++) {
-        document.getElementById("barista" + i).innerHTML = "";
-        document.getElementById("title" + i).textContent = "👤 Barista " + i + " (0 طلب)";
-      }
+    // مسارات
+    const ORDERS_ROOT = ref(db, "orders");
+    const ARCHIVE_BY_TABLE   = (t)=> ref(db, `workersArchive/orders/table${t}`); // لكل طاولة
+    const ARCHIVE_BY_BARISTA = (b,t,k)=> ref(db, `workersArchive/baristas/${b}/table${t}/${k}`); // لكل عامل
 
-      // عداد الطلبات
-      const counters = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
+    // ===============
+    // 1) نسخ تلقائي للأرشيف عند أي إضافة/تغيير في orders/**
+    //    (بدون أزرار، وبدون أي حذف من الأرشيف)
+    // ===============
+    function mirrorOrderToArchive(tableNumber, key, data){
+      if (!data || typeof data !== 'object') return;
+      const assignedTo = data.assignedTo || 'unassigned';
+      const payload = {
+        ...data,
+        table: data.table || String(tableNumber),
+        assignedTo,
+        archivedAt: Date.now()
+      };
+      // حفظ تحت الأرشيف حسب الطاولة
+      set(ref(db, `workersArchive/orders/table${tableNumber}/${key}`), payload);
+      // وحفظ نسخة أخرى تحت العامل (إن وُجد)
+      set(ref(db, `workersArchive/baristas/${assignedTo}/table${tableNumber}/${key}`), payload);
+    }
 
-      if (snapshot.exists()) {
-        snapshot.forEach((child) => {
-          const data = child.val();
-          if (data.assignedTo) {
-            const div = document.createElement("div");
-            div.className = "order";
-            div.innerHTML = `
-              <h3>🍽️ طاولة ${data.table}</h3>
-              <ul>
-                ${data.order.map(item => `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`).join("")}
-              </ul>
-              <p><b>الإجمالي:</b> ${data.total} جنيه</p>
-              ${data.notes ? `<p><b>ملاحظات:</b> ${data.notes}</p>` : ""}
-              <span class="status ${statusColor(data.status)}">${data.status || "غير محدد"}</span>
-            `;
-            // إضافة للعمود الخاص بالعامل
-            const col = document.getElementById(data.assignedTo);
-            if (col) {
-              col.appendChild(div);
-              counters[data.assignedTo]++;
-            }
+    // الاشتراك على كل الطاولات داخل orders/**
+    onValue(ORDERS_ROOT, async (snap)=>{
+      // عند أي تغيير، نقرأ الطاولات وننسخ أي طلبات جديدة/معدلة للأرشيف
+      if (!snap.exists()) return; // لا نحذف شيئًا من الأرشيف
+      const orders = snap.val();
+      for (const tableKey in orders){
+        if (!tableKey.startsWith('table')) continue;
+        const tableNumber = tableKey.replace('table','');
+        const tableNode = orders[tableKey];
+        // قد يوجد حقل status عام للطاولة، نتجاهله
+        for (const k in tableNode){
+          const entry = tableNode[k];
+          if (entry && typeof entry === 'object' && Array.isArray(entry.order)){
+            mirrorOrderToArchive(tableNumber, k, entry);
           }
-        });
-      }
-
-      // تحديث العناوين بعد العد
-      for (let i = 1; i <= 5; i++) {
-        document.getElementById("title" + i).textContent = `👤 Barista ${i} (${counters["barista"+i]} طلب)`;
+        }
       }
     });
 
-    function statusColor(status) {
-      switch (status) {
-        case "قيد التنفيذ": return "red";
-        case "قيد التحضير": return "yellow";
-        case "منتهي": return "green";
-        default: return "";
+    // كذلك نلتقط تغييرات الطفل مباشرة (أدق وأخف)
+    for (let i=1;i<=21;i++){
+      const tRef = ref(db, `orders/table${i}`);
+      onChildAdded(tRef, (child)=>{
+        const v = child.val();
+        if (v && typeof v === 'object' && Array.isArray(v.order)){
+          mirrorOrderToArchive(i, child.key, v);
+        }
+      });
+      onChildChanged(tRef, (child)=>{
+        const v = child.val();
+        if (v && typeof v === 'object' && Array.isArray(v.order)){
+          mirrorOrderToArchive(i, child.key, v);
+        }
+      });
+    }
+
+    // ===============
+    // 2) العرض من الأرشيف الدائم فقط (لن يتأثر بحذف المدير)
+    // ===============
+    const counters = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
+
+    function clearUI(){
+      for (let i=1;i<=5;i++){
+        document.getElementById('barista'+i).innerHTML = '';
+        document.getElementById('title'+i).textContent = `👤 Barista ${i} (0)`;
+      }
+      document.getElementById('unassigned').innerHTML = '<em>لا يوجد</em>';
+      counters.barista1=counters.barista2=counters.barista3=counters.barista4=counters.barista5=0;
+    }
+
+    function statusColor(status){
+      switch(status){
+        case 'قيد التنفيذ': return 'red';
+        case 'قيد التحضير': return 'yellow';
+        case 'طلب حساب':   return 'blue';
+        case 'منتهي':       return 'green';
+        default:            return 'gray';
       }
     }
+
+    function renderOrder(container, data){
+      const div = document.createElement('div');
+      div.className = 'order';
+      const items = Array.isArray(data.order) ? data.order.map(it=>`<li>${it.name} × ${it.qty} = ${it.qty * it.price}ج</li>`).join('') : '';
+      div.innerHTML = `
+        <h4>🍽️ طاولة ${data.table || ''}</h4>
+        <ul>${items}</ul>
+        <div class="meta"><b>الإجمالي:</b> ${data.total || 0} جنيه</div>
+        ${data.notes ? `<div class="meta"><b>ملاحظات:</b> ${data.notes}</div>` : ''}
+        <span class="status ${statusColor(data.status)}">${data.status || 'غير محدد'}</span>
+      `;
+      container.appendChild(div);
+    }
+
+    // عرض الطلبات حسب العامل من الأرشيف
+    function subscribeArchive(){
+      // نعيد بناء الواجهة كاملة عند أي تغيير جذري
+      onValue(ref(db, 'workersArchive/baristas'), (snap)=>{
+        clearUI();
+        if (!snap.exists()) return;
+        const byBarista = snap.val();
+        // أولاً قسم غير المُسند
+        if (byBarista.unassigned){
+          const unassignedBox = document.getElementById('unassigned');
+          unassignedBox.innerHTML = '';
+          const tables = byBarista.unassigned;
+          for (const t in tables){
+            const orders = tables[t];
+            for (const k in orders){
+              renderOrder(unassignedBox, orders[k]);
+            }
+          }
+        }
+        // ثم الخمسة عمال
+        for (let i=1;i<=5;i++){
+          const key = 'barista'+i;
+          const col = document.getElementById(key);
+          const title = document.getElementById('title'+i);
+          if (!byBarista[key]){ title.textContent = `👤 Barista ${i} (0)`; continue; }
+          const tables = byBarista[key];
+          let count = 0;
+          for (const t in tables){
+            const orders = tables[t];
+            for (const k in orders){
+              renderOrder(col, orders[k]);
+              count++;
+            }
+          }
+          counters[key] = count;
+          title.textContent = `👤 Barista ${i} (${count})`;
+        }
+      });
+    }
+
+    // بدء الاشتراكات
+    subscribeArchive();
   </script>
 </body>
 </html>
