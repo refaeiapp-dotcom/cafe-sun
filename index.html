@@ -16,6 +16,7 @@
     button { margin: 5px 0; padding: 10px; width: 100%; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
     #orderBtn { background: #4CAF50; color: white; }
     #billBtn { background: #2196F3; color: white; display: none; }
+    #callBtn { background: #FF9800; color: white; display: block; } /* زرار نداء الإدارة */
     #message { margin-top: 10px; text-align: center; font-weight: bold; }
     .order-box {
       background: #fff; border: 1px solid #ddd; border-radius: 8px;
@@ -49,12 +50,12 @@
 
   <button id="orderBtn">إتمام الطلب</button>
   <button id="billBtn">طلب الحساب</button>
+  <button id="callBtn">📢 نداء الإدارة</button>
   <div id="message"></div>
 
   <h3>طلباتي الحالية:</h3>
   <div id="myOrders"></div>
 
-  <!-- ✅ مكان مخصص لملخص الحساب -->
   <div id="billSummary"></div>
 
   <!-- Firebase -->
@@ -75,7 +76,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ✅ القائمة الجديدة بعد التصحيح
+    // القائمة
     const items = [
       { name: "شاي", price: 20 },
       { name: "قهوة", price: 25 },
@@ -159,7 +160,7 @@
 
     const ordersRef = ref(db, "orders/table" + tableNumber);
 
-    // 🔹 إتمام الطلب
+    // إتمام الطلب
     document.getElementById("orderBtn").addEventListener("click", () => {
       const order = items.map((item, index) => {
         const qty = parseInt(document.getElementById(`qty-${index}`).value);
@@ -189,7 +190,7 @@
       resetQuantities();
     });
 
-    // 🔹 طلب الحساب
+    // طلب الحساب
     document.getElementById("billBtn").addEventListener("click", async () => {
       const snapshot = await get(ordersRef);
       if (snapshot.exists()) {
@@ -218,7 +219,13 @@
       }
     });
 
-    // 🔹 تصفير الكميات
+    // زرار نداء الإدارة
+    document.getElementById("callBtn").addEventListener("click", async () => {
+      await update(ordersRef, { alert: true });
+      document.getElementById("message").textContent = "📢 تم إرسال نداء للإدارة";
+    });
+
+    // تصفير الكميات
     function resetQuantities() {
       items.forEach((item, index) => {
         document.getElementById(`qty-${index}`).value = 0;
@@ -227,7 +234,7 @@
       totalPriceEl.textContent = 0;
     }
 
-    // 🔹 عرض كل الطلبات أسفل اللوحة
+    // عرض الطلبات
     onValue(ordersRef, (snapshot) => {
       const container = document.getElementById("myOrders");
       container.innerHTML = "";
