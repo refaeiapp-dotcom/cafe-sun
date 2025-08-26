@@ -260,7 +260,9 @@
           container.innerHTML += html;
         });
       } else {
+        // ✅ لو المدير مسح الطلبات كلها → يظهر رسالة للعميل
         container.innerHTML = "<p>لا توجد طلبات بعد</p>";
+        document.getElementById("billSummary").innerHTML = "";
       }
     });
   </script>
