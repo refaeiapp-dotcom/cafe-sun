@@ -75,17 +75,51 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // ✅ القائمة الجديدة بعد التصحيح
     const items = [
-      { name: "شاي", price: 10 },
-      { name: "قهوة", price: 15 },
-      { name: "عصير برتقال", price: 20 },
-      { name: "عصير مانجو", price: 25 },
-      { name: "بيبسي", price: 12 },
-      { name: "مياه معدنية", price: 8 },
-      { name: "كيك", price: 30 },
-      { name: "ساندوتش جبنة", price: 18 },
-      { name: "بيتزا", price: 50 },
-      { name: "برجر", price: 45 }
+      { name: "شاي", price: 20 },
+      { name: "قهوة", price: 25 },
+      { name: "قهوة فرنساوي", price: 45 },
+      { name: "كوفي مكس", price: 20 },
+      { name: "ينسون", price: 25 },
+      { name: "حلية", price: 25 },
+      { name: "كاكاو", price: 45 },
+      { name: "سحلب سادة", price: 50 },
+      { name: "سحلب بالمكسرات", price: 70 },
+      { name: "سحلب فواكه", price: 70 },
+      { name: "توست", price: 40 },
+      { name: "هوت سيدر", price: 60 },
+      { name: "لاتيه بندق", price: 60 },
+      { name: "لاتيه فانيليا", price: 60 },
+      { name: "لاتيه كلاسك", price: 60 },
+      { name: "بريل", price: 40 },
+      { name: "مياه", price: 10 },
+      { name: "بيبسي", price: 30 },
+      { name: "ميرندا", price: 30 },
+      { name: "سفن اب", price: 30 },
+      { name: "فيروز", price: 40 },
+      { name: "استنج", price: 40 },
+      { name: "عصير برتقال", price: 80 },
+      { name: "عصير مانجو", price: 80 },
+      { name: "عصير فراولة", price: 80 },
+      { name: "عناب", price: 50 },
+      { name: "موز باللبن", price: 80 },
+      { name: "زبادي", price: 80 },
+      { name: "زبادي بالفواكه", price: 80 },
+      { name: "آيس كوفي", price: 70 },
+      { name: "آيس لاتيه", price: 70 },
+      { name: "اوريو", price: 70 },
+      { name: "ريد بول", price: 100 },
+      { name: "اوريو مقارنيش", price: 50 },
+      { name: "ليمون نعناع", price: 50 },
+      { name: "فروت سلاط", price: 120 },
+      { name: "آيس شوكولاتة", price: 80 },
+      { name: "هوت شوكولاتة", price: 80 },
+      { name: "موهيتو", price: 70 },
+      { name: "حجر سلوم", price: 20 },
+      { name: "حجر قص", price: 20 },
+      { name: "حجر فواكه", price: 100 },
+      { name: "حجر مكس", price: 100 }
     ];
 
     const menu = document.getElementById("menu");
@@ -177,13 +211,9 @@
         });
 
         allOrdersHtml += `<h3 style="color:blue">💳 المجموع الكلي: ${grandTotal} جنيه</h3>`;
-
-        // ✅ ملخص الحساب يظهر في مكان ثابت
         document.getElementById("billSummary").innerHTML = allOrdersHtml;
 
-        // ✅ تحديث حالة الطاولة (الأب) إلى "طلب حساب"
         await update(ordersRef, { status: "طلب حساب" });
-
         document.getElementById("message").textContent = "💳 تم إرسال طلب الحساب";
       }
     });
