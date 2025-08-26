@@ -91,32 +91,40 @@
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
 
-    // إنشاء الطاولات
+    // ✅ نخزن حالة كل طاولة هنا بدل الاعتماد على الـ CSS
+    const tableStatus = {}; // { 1: "gray" | "قيد التنفيذ" | "قيد التحضير" | "طلب حساب" | "منتهي" }
+
+    // إنشاء الطاولات + الاشتراك على بياناتها
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
       btn.textContent = "طاولة " + i;
-      btn.addEventListener("click", () => openModal(i));
+      btn.addEventListener("click", () => handleTableClick(i, btn));
       grid.appendChild(btn);
 
       const tableRef = ref(db, "orders/table" + i);
       onValue(tableRef, (snapshot) => {
         if (snapshot.exists()) {
-          let lastStatus = "gray";
+          let computed = "gray";
+          const data = snapshot.val();
 
-          // ✅ أولاً: لو الطاولة نفسها فيها status = "طلب حساب"
-          const tableData = snapshot.val();
-          if (tableData.status === "طلب حساب") {
-            lastStatus = "طلب حساب";
+          // لو حالة الطاولة العامة = طلب حساب
+          if (data && data.status === "طلب حساب") {
+            computed = "طلب حساب";
           } else {
-            // ✅ لو مفيش، نجيب آخر طلب ونشوف حالته
-            snapshot.forEach(orderSnap => {
-              lastStatus = orderSnap.val().status;
+            // ندور على حالة الطلبات الفرعية (نتجاهل مفاتيح ليست كائنات طلب)
+            snapshot.forEach(child => {
+              const v = child.val();
+              if (v && typeof v === "object" && v.status) {
+                computed = v.status; // آخر حالة نلاقيها
+              }
             });
           }
 
-          updateButtonColor(btn, lastStatus);
+          tableStatus[i] = computed;
+          updateButtonColor(btn, computed);
         } else {
+          tableStatus[i] = "gray";
           btn.className = "table-btn gray";
         }
       });
@@ -129,8 +137,33 @@
         case "قيد التحضير": btn.classList.add("yellow"); break;
         case "طلب حساب":   btn.classList.add("blue"); break;
         case "منتهي":       btn.classList.add("green"); break;
-        default:            btn.classList.add("gray");
+        default:             btn.classList.add("gray");
       }
+    }
+
+    // ✅ عند الضغط على الطاولة: لو حالتها طلب حساب → نحذف الطلبات ونرجّع رمادي
+    function handleTableClick(tableNumber, btn) {
+      const statusNow = tableStatus[tableNumber] || "gray";
+      if (statusNow === "طلب حساب") {
+        if (confirm(`هل تريد إنهاء وحذف جميع طلبات الطاولة ${tableNumber}؟`)) {
+          // نحذف العقدة كلها لضمان اختفاءها من لوحة العميل أيضًا
+          remove(ref(db, `orders/table${tableNumber}`))
+            .then(() => {
+              // نعيد اللون فورًا، والتحديث اللحظي من onValue هيأكد
+              btn.className = "table-btn gray";
+              tableStatus[tableNumber] = "gray";
+              alert("✅ تم إنهاء الطلبات للطاولة " + tableNumber);
+            })
+            .catch((e) => {
+              console.error(e);
+              alert("حدث خطأ أثناء الحذف");
+            });
+        }
+        return;
+      }
+
+      // غير ذلك نفتح التفاصيل
+      openModal(tableNumber);
     }
 
     function openModal(tableNumber) {
@@ -145,20 +178,23 @@
           let html = "";
           snapshot.forEach(orderSnap => {
             const data = orderSnap.val();
+            if (!data || typeof data !== "object") return; // تجاهل مفاتيح ليست طلبات
             html += `<div class="order-box">`;
             html += `<p><b>الحالة:</b> ${data.status || "غير محدد"}</p><ul>`;
-            data.order.forEach(item => {
-              html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
-            });
-            html += `</ul><p><b>الإجمالي:</b> ${data.total} جنيه</p>`;
+            if (Array.isArray(data.order)) {
+              data.order.forEach(item => {
+                html += `<li>${item.name} × ${item.qty} = ${item.qty * item.price}ج</li>`;
+              });
+            }
+            html += `</ul><p><b>الإجمالي:</b> ${data.total || 0} جنيه</p>`;
             if (data.notes) html += `<p><b>ملاحظات:</b> ${data.notes}</p>`;
             html += `</div>`;
           });
-          body.innerHTML = html;
+          body.innerHTML = html || "<p>لا يوجد طلبات</p>";
         } else {
           body.innerHTML = "<p>لا يوجد طلبات</p>";
         }
-      });
+      }, { onlyOnce: true }); // نتجنب تكرار الاشتراكات كل مرة يفتح المودال
 
       // أزرار الإرسال
       const assignDiv = document.getElementById("assign-buttons");
@@ -181,8 +217,9 @@
           snapshot.forEach(orderSnap => {
             const key = orderSnap.key;
             const data = orderSnap.val();
+            if (!data || typeof data !== "object") return; // تجاهل مفاتيح ليست طلبات
             // تحديث حالة الطلب
-            update(ref(db, "orders/table" + currentTable + "/" + key), { status: "قيد التحضير", assignedTo: baristaId });
+            update(ref(db, `orders/table${currentTable}/${key}`), { status: "قيد التحضير", assignedTo: baristaId });
             // نسخه للبارستا
             set(ref(db, `baristas/${baristaId}/orders/table${currentTable}/${key}`), data);
             // تحديث حالة العامل
