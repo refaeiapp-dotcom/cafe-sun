@@ -61,7 +61,7 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, set, push, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, set, push, update, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
@@ -234,7 +234,7 @@
       totalPriceEl.textContent = 0;
     }
 
-    // عرض الطلبات
+    // عرض الطلبات (مع متابعة الحذف من لوحة المدير)
     onValue(ordersRef, (snapshot) => {
       const container = document.getElementById("myOrders");
       container.innerHTML = "";
