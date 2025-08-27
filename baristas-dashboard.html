@@ -29,8 +29,6 @@
     .green { background: seagreen; color: #fff; }
     .blue { background: royalblue; color: #fff; }
     .gray { background: #9ca3af; color: #fff; }
-
-    .unassigned { background: #fff7ed; border: 1px dashed #f59e0b; border-radius: 10px; padding: 10px; }
   </style>
 </head>
 <body>
@@ -38,11 +36,6 @@
   <p class="hint">المصدر: <b>الأرشيف الدائم</b> (workersArchive). يتم نسخ أي طلب يصل إلى المسار <code>orders/</code> تلقائيًا هنا، ولن يتأثر هذا العرض بحذف المدير أو طلب الحساب الأزرق.</p>
 
   <div class="wrap">
-    <section class="panel">
-      <h2>طلبات غير مُسندة بعد (للمعلومية فقط)</h2>
-      <div id="unassigned" class="unassigned"></div>
-    </section>
-
     <section class="panel">
       <h2>الأرشيف الدائم حسب العامل</h2>
       <div class="grid">
@@ -57,7 +50,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getDatabase, ref, onValue, onChildAdded, onChildChanged, get, set, update } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+    import { getDatabase, ref, onValue, onChildAdded, onChildChanged, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
     // إعدادات Firebase (نفس المشروع)
     const firebaseConfig = {
@@ -75,13 +68,7 @@
 
     // مسارات
     const ORDERS_ROOT = ref(db, "orders");
-    const ARCHIVE_BY_TABLE   = (t)=> ref(db, `workersArchive/orders/table${t}`); // لكل طاولة
-    const ARCHIVE_BY_BARISTA = (b,t,k)=> ref(db, `workersArchive/baristas/${b}/table${t}/${k}`); // لكل عامل
 
-    // ===============
-    // 1) نسخ تلقائي للأرشيف عند أي إضافة/تغيير في orders/**
-    //    (بدون أزرار، وبدون أي حذف من الأرشيف)
-    // ===============
     function mirrorOrderToArchive(tableNumber, key, data){
       if (!data || typeof data !== 'object') return;
       const assignedTo = data.assignedTo || 'unassigned';
@@ -91,22 +78,17 @@
         assignedTo,
         archivedAt: Date.now()
       };
-      // حفظ تحت الأرشيف حسب الطاولة
       set(ref(db, `workersArchive/orders/table${tableNumber}/${key}`), payload);
-      // وحفظ نسخة أخرى تحت العامل (إن وُجد)
       set(ref(db, `workersArchive/baristas/${assignedTo}/table${tableNumber}/${key}`), payload);
     }
 
-    // الاشتراك على كل الطاولات داخل orders/**
-    onValue(ORDERS_ROOT, async (snap)=>{
-      // عند أي تغيير، نقرأ الطاولات وننسخ أي طلبات جديدة/معدلة للأرشيف
-      if (!snap.exists()) return; // لا نحذف شيئًا من الأرشيف
+    onValue(ORDERS_ROOT, (snap)=>{
+      if (!snap.exists()) return;
       const orders = snap.val();
       for (const tableKey in orders){
         if (!tableKey.startsWith('table')) continue;
         const tableNumber = tableKey.replace('table','');
         const tableNode = orders[tableKey];
-        // قد يوجد حقل status عام للطاولة، نتجاهله
         for (const k in tableNode){
           const entry = tableNode[k];
           if (entry && typeof entry === 'object' && Array.isArray(entry.order)){
@@ -116,7 +98,6 @@
       }
     });
 
-    // كذلك نلتقط تغييرات الطفل مباشرة (أدق وأخف)
     for (let i=1;i<=21;i++){
       const tRef = ref(db, `orders/table${i}`);
       onChildAdded(tRef, (child)=>{
@@ -133,9 +114,6 @@
       });
     }
 
-    // ===============
-    // 2) العرض من الأرشيف الدائم فقط (لن يتأثر بحذف المدير)
-    // ===============
     const counters = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
 
     function clearUI(){
@@ -143,7 +121,6 @@
         document.getElementById('barista'+i).innerHTML = '';
         document.getElementById('title'+i).textContent = `👤 Barista ${i} (0)`;
       }
-      document.getElementById('unassigned').innerHTML = '<em>لا يوجد</em>';
       counters.barista1=counters.barista2=counters.barista3=counters.barista4=counters.barista5=0;
     }
 
@@ -171,26 +148,11 @@
       container.appendChild(div);
     }
 
-    // عرض الطلبات حسب العامل من الأرشيف
     function subscribeArchive(){
-      // نعيد بناء الواجهة كاملة عند أي تغيير جذري
       onValue(ref(db, 'workersArchive/baristas'), (snap)=>{
         clearUI();
         if (!snap.exists()) return;
         const byBarista = snap.val();
-        // أولاً قسم غير المُسند
-        if (byBarista.unassigned){
-          const unassignedBox = document.getElementById('unassigned');
-          unassignedBox.innerHTML = '';
-          const tables = byBarista.unassigned;
-          for (const t in tables){
-            const orders = tables[t];
-            for (const k in orders){
-              renderOrder(unassignedBox, orders[k]);
-            }
-          }
-        }
-        // ثم الخمسة عمال
         for (let i=1;i<=5;i++){
           const key = 'barista'+i;
           const col = document.getElementById(key);
@@ -211,7 +173,6 @@
       });
     }
 
-    // بدء الاشتراكات
     subscribeArchive();
   </script>
 </body>
