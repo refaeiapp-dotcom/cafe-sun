@@ -28,9 +28,11 @@
     .actions { text-align:center; margin-top:18px; }
     .actions button {
       background:seagreen; color:#fff; border:none; padding:10px 18px;
-      border-radius:8px; font-size:16px; cursor:pointer;
+      border-radius:8px; font-size:16px; cursor:pointer; margin:0 5px;
     }
     .actions button:hover { background:darkgreen; }
+    .actions button.danger { background:crimson; }
+    .actions button.danger:hover { background:darkred; }
   </style>
 </head>
 <body>
@@ -47,6 +49,7 @@
 
     <div class="actions">
       <button onclick="exportToExcel()">⬇️ تصدير إلى Excel</button>
+      <button onclick="clearArchive()" class="danger">🗑️ تصفير الأرشيف</button>
     </div>
   </div>
 
@@ -186,10 +189,8 @@
 
     // ————— تصدير إلى Excel (xlsx فعلي) —————
     window.exportToExcel = async function(){
-      // نحمّل SheetJS كـ ES Module وقت الضغط
       const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
 
-      // نبني صفوفنا
       const rows = [
         ["العامل","رقم الطاولة","الطلبات","الإجمالي","الحالة","ملاحظات","وقت الأرشفة"]
       ];
@@ -220,7 +221,6 @@
         }
       }
 
-      // لو مافيش بيانات، نحط صف واحد فاضي علشان الملف يفتح عادي
       if (rows.length === 1) rows.push(["","","","","","",""]);
 
       const wb = XLSX.utils.book_new();
@@ -237,6 +237,18 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    };
+
+    // ————— تصفير الأرشيف —————
+    window.clearArchive = async function(){
+      if (!confirm("⚠️ هل أنت متأكد أنك تريد مسح الأرشيف بالكامل؟")) return;
+      try {
+        await set(ref(db, 'workersArchive'), null);
+        alert("✅ تم مسح الأرشيف بالكامل بنجاح");
+      } catch(err){
+        console.error(err);
+        alert("❌ حدث خطأ أثناء المسح");
+      }
     };
   </script>
 </body>
