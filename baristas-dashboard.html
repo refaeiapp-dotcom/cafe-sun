@@ -50,6 +50,7 @@
     <div class="actions">
       <button onclick="exportToExcel()">⬇️ تصدير إلى Excel</button>
       <button onclick="clearArchive()" class="danger">🗑️ تصفير الأرشيف</button>
+      <button onclick="goToAdmin()">⚙️ لوحة الإدارة</button>
     </div>
   </div>
 
@@ -57,7 +58,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, onValue, onChildAdded, onChildChanged, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -71,7 +71,6 @@
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // ————— mirroring: نسخ الطلبات تلقائيًا إلى الأرشيف الدائم —————
     const ORDERS_ROOT = ref(db, "orders");
 
     function mirrorOrderToArchive(tableNumber, key, data){
@@ -87,31 +86,30 @@
       set(ref(db, `workersArchive/baristas/${assignedTo}/table${tableNumber}/${key}`), payload);
     }
 
-    onValue(ORDERS_ROOT, (snap)=>{
+    onValue(ORDERS_ROOT, snap => {
       if (!snap.exists()) return;
       const orders = snap.val();
-      for (const tableKey in orders){
+      for (const tableKey in orders) {
         if (!tableKey.startsWith('table')) continue;
         const tableNumber = tableKey.replace('table','');
-        const tableNode = orders[tableKey];
-        for (const k in tableNode){
-          const entry = tableNode[k];
-          if (entry && typeof entry === 'object' && Array.isArray(entry.order)){
+        for (const k in orders[tableKey]) {
+          const entry = orders[tableKey][k];
+          if (entry && typeof entry === 'object' && Array.isArray(entry.order)) {
             mirrorOrderToArchive(tableNumber, k, entry);
           }
         }
       }
     });
 
-    for (let i=1;i<=21;i++){
+    for (let i = 1; i <= 21; i++){
       const tRef = ref(db, `orders/table${i}`);
-      onChildAdded(tRef, (child)=>{
+      onChildAdded(tRef, child => {
         const v = child.val();
         if (v && typeof v === 'object' && Array.isArray(v.order)){
           mirrorOrderToArchive(i, child.key, v);
         }
       });
-      onChildChanged(tRef, (child)=>{
+      onChildChanged(tRef, child => {
         const v = child.val();
         if (v && typeof v === 'object' && Array.isArray(v.order)){
           mirrorOrderToArchive(i, child.key, v);
@@ -119,12 +117,11 @@
       });
     }
 
-    // ————— العرض من workersArchive فقط —————
     const counters = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
-    let byBaristaCache = {}; // هنستخدمه للتصدير إلى Excel
+    let byBaristaCache = {};
 
     function clearUI(){
-      for (let i=1;i<=5;i++){
+      for (let i=1; i<=5; i++){
         document.getElementById('barista'+i).innerHTML = '';
         document.getElementById('title'+i).textContent = `👤 Barista ${i} (0)`;
       }
@@ -135,41 +132,38 @@
       switch(status){
         case 'قيد التنفيذ': return 'red';
         case 'قيد التحضير': return 'yellow';
-        case 'طلب حساب':   return 'blue';
-        case 'منتهي':       return 'green';
-        default:            return 'gray';
+        case 'طلب حساب': return 'blue';
+        case 'منتهي': return 'green';
+        default: return 'gray';
       }
     }
 
     function renderOrder(container, data){
       const div = document.createElement('div');
       div.className = 'order';
-      const items = Array.isArray(data.order)
-        ? data.order.map(it=>`<li>${it.name} × ${it.qty} = ${it.qty * it.price}ج</li>`).join('')
-        : '';
+      const items = Array.isArray(data.order) ? data.order.map(it=>`<li>${it.name} × ${it.qty} = ${it.qty * it.price}ج</li>`).join('') : '';
       div.innerHTML = `
-        <h4>🍽️ طاولة ${data.table || ''}</h4>
+        <h4>🍽️ طاولة ${data.table||''}</h4>
         <ul>${items}</ul>
-        <div class="meta"><b>الإجمالي:</b> ${data.total || 0} جنيه</div>
-        ${data.notes ? `<div class="meta"><b>ملاحظات:</b> ${data.notes}</div>` : ''}
-        <span class="status ${statusColor(data.status)}">${data.status || 'غير محدد'}</span>
+        <div class="meta"><b>الإجمالي:</b> ${data.total||0} جنيه</div>
+        ${data.notes?`<div class="meta"><b>ملاحظات:</b> ${data.notes}</div>`: ''}
+        <span class="status ${statusColor(data.status)}">${data.status||'غير محدد'}</span>
       `;
       container.appendChild(div);
     }
 
     function subscribeArchive(){
-      onValue(ref(db, 'workersArchive/baristas'), (snap)=>{
+      onValue(ref(db, 'workersArchive/baristas'), snap => {
         clearUI();
-        if (!snap.exists()) { byBaristaCache = {}; return; }
+        if (!snap.exists()){ byBaristaCache = {}; return; }
         const byBarista = snap.val();
-        byBaristaCache = byBarista; // نخزّن آخر نسخة للتصدير
+        byBaristaCache = byBarista;
 
-        for (let i=1;i<=5;i++){
+        for (let i=1; i<=5; i++){
           const key = 'barista'+i;
           const col = document.getElementById(key);
           const title = document.getElementById('title'+i);
           if (!byBarista[key]){ title.textContent = `👤 Barista ${i} (0)`; continue; }
-
           const tables = byBarista[key];
           let count = 0;
           for (const t in tables){
@@ -184,51 +178,30 @@
         }
       });
     }
-
     subscribeArchive();
 
-    // ————— تصدير إلى Excel (xlsx فعلي) —————
     window.exportToExcel = async function(){
       const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
-
-      const rows = [
-        ["العامل","رقم الطاولة","الطلبات","الإجمالي","الحالة","ملاحظات","وقت الأرشفة"]
-      ];
-
-      for (let i=1;i<=5;i++){
+      const rows = [["العامل","رقم الطاولة","الطلبات","الإجمالي","الحالة","ملاحظات","وقت الأرشفة"]];
+      for (let i=1; i<=5; i++){
         const key = 'barista'+i;
         const workerName = `Barista ${i}`;
         if (!byBaristaCache[key]) continue;
-
         const tables = byBaristaCache[key];
         for (const t in tables){
-          const orders = tables[t];
-          for (const k in orders){
-            const o = orders[k] || {};
-            const items = Array.isArray(o.order)
-              ? o.order.map(it=>`${it.name} × ${it.qty} = ${it.qty * it.price}ج`).join(" | ")
-              : "";
-            rows.push([
-              workerName,
-              o.table || t.replace('table',''),
-              items,
-              o.total ?? "",
-              o.status ?? "",
-              o.notes ?? "",
-              o.archivedAt ? new Date(o.archivedAt).toLocaleString('ar-EG') : ""
-            ]);
+          for (const k in tables[t]){
+            const o = tables[t][k];
+            const items = Array.isArray(o.order) ? o.order.map(it=>`${it.name} × ${it.qty} = ${it.qty * it.price}ج`).join(" | ") : "";
+            rows.push([workerName, o.table||t.replace('table',''), items, o.total||"", o.status||"", o.notes||"", o.archivedAt?new Date(o.archivedAt).toLocaleString('ar-EG'):""]);
           }
         }
       }
-
       if (rows.length === 1) rows.push(["","","","","","",""]);
-
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "Workers_Archive");
-      const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-
-      const blob = new Blob([out], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+      const blob = new Blob([out], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -239,16 +212,19 @@
       URL.revokeObjectURL(url);
     };
 
-    // ————— تصفير الأرشيف —————
     window.clearArchive = async function(){
       if (!confirm("⚠️ هل أنت متأكد أنك تريد مسح الأرشيف بالكامل؟")) return;
       try {
-        await set(ref(db, 'workersArchive'), null);
+        await set(ref(db,'workersArchive'), null);
         alert("✅ تم مسح الأرشيف بالكامل بنجاح");
       } catch(err){
         console.error(err);
         alert("❌ حدث خطأ أثناء المسح");
       }
+    };
+
+    window.goToAdmin = function(){
+      window.location.href = "https://refaeiapp-dotcom.github.io/cafe-sun/manager.html";
     };
   </script>
 </body>
