@@ -212,11 +212,13 @@
       URL.revokeObjectURL(url);
     };
 
+    // ✅ تصفير الجدولين orders + workersArchive
     window.clearArchive = async function(){
-      if (!confirm("⚠️ هل أنت متأكد أنك تريد مسح الأرشيف بالكامل؟")) return;
+      if (!confirm("⚠️ هل أنت متأكد أنك تريد مسح الأرشيف والطلبات بالكامل؟")) return;
       try {
         await set(ref(db,'workersArchive'), null);
-        alert("✅ تم مسح الأرشيف بالكامل بنجاح");
+        await set(ref(db,'orders'), null);
+        alert("✅ تم مسح الأرشيف وجداول الطلبات بالكامل بنجاح");
       } catch(err){
         console.error(err);
         alert("❌ حدث خطأ أثناء المسح");
