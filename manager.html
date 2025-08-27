@@ -7,6 +7,20 @@
     body { font-family: Tahoma, Arial, sans-serif; background:#f9f9f9; text-align:center; margin:0; padding:20px; }
     h1 { margin:10px 0 20px; color:#333; }
 
+    /* زرار نداء الإدارة */
+    #alert-btn {
+      padding:10px 20px;
+      border:none;
+      border-radius:8px;
+      font-size:18px;
+      font-weight:bold;
+      cursor:pointer;
+      margin-bottom:20px;
+      color:#fff;
+    }
+    .alert-green { background:seagreen; }
+    .alert-red { background:crimson; }
+
     /* شريط العمال */
     #baristas-status { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:18px; }
     .barista { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; color:#fff; }
@@ -41,6 +55,9 @@
 <body>
 
   <h1>☕ لوحة المدير - إدارة الطلبات</h1>
+
+  <!-- زرار نداء الإدارة -->
+  <button id="alert-btn" class="alert-green">📢 لا يوجد نداءات</button>
 
   <!-- شريط العمال -->
   <div id="baristas-status">
@@ -90,9 +107,52 @@
 
     const grid = document.getElementById("tables-grid");
     let currentTable = null;
-
     const tableStatus = {};
 
+    // زرار نداء الإدارة
+    const alertBtn = document.getElementById("alert-btn");
+    const alertsRef = ref(db, "orders");
+
+    onValue(alertsRef, (snapshot) => {
+      let alertTables = [];
+      snapshot.forEach(tableSnap => {
+        const tNum = tableSnap.key.replace("table", "");
+        const data = tableSnap.val();
+        if (data && data.alert === true) {
+          alertTables.push(tNum);
+        }
+      });
+
+      if (alertTables.length > 0) {
+        alertBtn.textContent = "📢 نداء من الطاولة " + alertTables.join(", ");
+        alertBtn.className = "alert-red";
+      } else {
+        alertBtn.textContent = "📢 لا يوجد نداءات";
+        alertBtn.className = "alert-green";
+      }
+    });
+
+    alertBtn.addEventListener("click", async () => {
+      try {
+        const snapshot = await get(alertsRef);
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            if (child.val().alert === true) {
+              update(ref(db, "orders/" + child.key), {
+                alert: false,
+                adminMessage: "تم تلقي طلبكم ✅"
+              });
+            }
+          });
+        }
+        alertBtn.textContent = "📢 لا يوجد نداءات";
+        alertBtn.className = "alert-green";
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    // إنشاء الطاولات
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
