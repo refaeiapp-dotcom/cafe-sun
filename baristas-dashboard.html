@@ -3,56 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة متابعة العمال (ثابتة مع أرشفة)</title>
+  <title>لوحة متابعة العمال (أرشيف ثابت)</title>
   <style>
-    body { font-family: Tahoma, Arial, sans-serif; margin: 0; padding: 20px; background: #f7fafc; color: #222; }
-    h1 { text-align: center; margin: 0 0 10px; }
-    .hint { text-align:center; margin: 0 0 20px; color:#555; font-size:14px; }
+    body { font-family: Tahoma, Arial, sans-serif; margin:0; padding:20px; background:#f7fafc; color:#222; }
+    h1 { text-align:center; margin:0 0 16px; }
 
-    .wrap { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 1280px; margin: 0 auto; }
+    .wrap { max-width:1280px; margin:0 auto; }
+    .grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; }
+    .barista { background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:10px; }
+    .barista h3 { margin:0 0 8px; font-size:16px; color:#0b3b60; }
 
-    .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
-    .panel h2 { margin: 0 0 10px; font-size: 18px; color:#1f2937; }
+    .order { background:#f3f4f6; border:1px solid #e5e7eb; border-radius:10px; padding:10px; margin-bottom:10px; text-align:right; }
+    .order h4 { margin:0 0 6px; font-size:15px; }
+    .order ul { margin:0 0 6px; padding-inline-start:18px; }
+    .order .meta { font-size:13px; color:#374151; }
 
-    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-    .barista { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; }
-    .barista h3 { margin: 0 0 8px; font-size: 16px; color:#0b3b60; }
+    .status { font-weight:bold; padding:3px 8px; border-radius:999px; display:inline-block; margin-top:6px; font-size:12px; }
+    .red { background:crimson; color:#fff; }
+    .yellow { background:goldenrod; color:#111; }
+    .green { background:seagreen; color:#fff; }
+    .blue { background:royalblue; color:#fff; }
+    .gray { background:#9ca3af; color:#fff; }
 
-    .order { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; margin-bottom: 10px; text-align: right; }
-    .order h4 { margin: 0 0 6px; font-size: 15px; }
-    .order ul { margin: 0 0 6px; padding-inline-start: 18px; }
-    .order .meta { font-size: 13px; color: #374151; }
-
-    .status { font-weight: bold; padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 6px; font-size: 12px; }
-    .red { background: crimson; color: #fff; }
-    .yellow { background: goldenrod; color: #111; }
-    .green { background: seagreen; color: #fff; }
-    .blue { background: royalblue; color: #fff; }
-    .gray { background: #9ca3af; color: #fff; }
+    .actions { text-align:center; margin-top:18px; }
+    .actions button {
+      background:seagreen; color:#fff; border:none; padding:10px 18px;
+      border-radius:8px; font-size:16px; cursor:pointer;
+    }
+    .actions button:hover { background:darkgreen; }
   </style>
 </head>
 <body>
   <h1>📊 لوحة متابعة العمال</h1>
-  <p class="hint">المصدر: <b>الأرشيف الدائم</b> (workersArchive). يتم نسخ أي طلب يصل إلى المسار <code>orders/</code> تلقائيًا هنا، ولن يتأثر هذا العرض بحذف المدير أو طلب الحساب الأزرق.</p>
 
   <div class="wrap">
-    <section class="panel">
-      <h2>الأرشيف الدائم حسب العامل</h2>
-      <div class="grid">
-        <div class="barista"><h3 id="title1">👤 Barista 1 (0)</h3><div id="barista1"></div></div>
-        <div class="barista"><h3 id="title2">👤 Barista 2 (0)</h3><div id="barista2"></div></div>
-        <div class="barista"><h3 id="title3">👤 Barista 3 (0)</h3><div id="barista3"></div></div>
-        <div class="barista"><h3 id="title4">👤 Barista 4 (0)</h3><div id="barista4"></div></div>
-        <div class="barista"><h3 id="title5">👤 Barista 5 (0)</h3><div id="barista5"></div></div>
-      </div>
-    </section>
+    <div class="grid">
+      <div class="barista"><h3 id="title1">👤 Barista 1 (0)</h3><div id="barista1"></div></div>
+      <div class="barista"><h3 id="title2">👤 Barista 2 (0)</h3><div id="barista2"></div></div>
+      <div class="barista"><h3 id="title3">👤 Barista 3 (0)</h3><div id="barista3"></div></div>
+      <div class="barista"><h3 id="title4">👤 Barista 4 (0)</h3><div id="barista4"></div></div>
+      <div class="barista"><h3 id="title5">👤 Barista 5 (0)</h3><div id="barista5"></div></div>
+    </div>
+
+    <div class="actions">
+      <button onclick="exportToExcel()">⬇️ تصدير إلى Excel</button>
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getDatabase, ref, onValue, onChildAdded, onChildChanged, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-    // إعدادات Firebase (نفس المشروع)
+    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYYtMci_1laKbOxpVYaHsMx670WPhtNbk",
       authDomain: "my-restaurant-aba99.firebaseapp.com",
@@ -66,7 +68,7 @@
     const app = initializeApp(firebaseConfig);
     const db  = getDatabase(app);
 
-    // مسارات
+    // ————— mirroring: نسخ الطلبات تلقائيًا إلى الأرشيف الدائم —————
     const ORDERS_ROOT = ref(db, "orders");
 
     function mirrorOrderToArchive(tableNumber, key, data){
@@ -114,7 +116,9 @@
       });
     }
 
+    // ————— العرض من workersArchive فقط —————
     const counters = { barista1:0, barista2:0, barista3:0, barista4:0, barista5:0 };
+    let byBaristaCache = {}; // هنستخدمه للتصدير إلى Excel
 
     function clearUI(){
       for (let i=1;i<=5;i++){
@@ -137,7 +141,9 @@
     function renderOrder(container, data){
       const div = document.createElement('div');
       div.className = 'order';
-      const items = Array.isArray(data.order) ? data.order.map(it=>`<li>${it.name} × ${it.qty} = ${it.qty * it.price}ج</li>`).join('') : '';
+      const items = Array.isArray(data.order)
+        ? data.order.map(it=>`<li>${it.name} × ${it.qty} = ${it.qty * it.price}ج</li>`).join('')
+        : '';
       div.innerHTML = `
         <h4>🍽️ طاولة ${data.table || ''}</h4>
         <ul>${items}</ul>
@@ -151,13 +157,16 @@
     function subscribeArchive(){
       onValue(ref(db, 'workersArchive/baristas'), (snap)=>{
         clearUI();
-        if (!snap.exists()) return;
+        if (!snap.exists()) { byBaristaCache = {}; return; }
         const byBarista = snap.val();
+        byBaristaCache = byBarista; // نخزّن آخر نسخة للتصدير
+
         for (let i=1;i<=5;i++){
           const key = 'barista'+i;
           const col = document.getElementById(key);
           const title = document.getElementById('title'+i);
           if (!byBarista[key]){ title.textContent = `👤 Barista ${i} (0)`; continue; }
+
           const tables = byBarista[key];
           let count = 0;
           for (const t in tables){
@@ -174,6 +183,61 @@
     }
 
     subscribeArchive();
+
+    // ————— تصدير إلى Excel (xlsx فعلي) —————
+    window.exportToExcel = async function(){
+      // نحمّل SheetJS كـ ES Module وقت الضغط
+      const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
+
+      // نبني صفوفنا
+      const rows = [
+        ["العامل","رقم الطاولة","الطلبات","الإجمالي","الحالة","ملاحظات","وقت الأرشفة"]
+      ];
+
+      for (let i=1;i<=5;i++){
+        const key = 'barista'+i;
+        const workerName = `Barista ${i}`;
+        if (!byBaristaCache[key]) continue;
+
+        const tables = byBaristaCache[key];
+        for (const t in tables){
+          const orders = tables[t];
+          for (const k in orders){
+            const o = orders[k] || {};
+            const items = Array.isArray(o.order)
+              ? o.order.map(it=>`${it.name} × ${it.qty} = ${it.qty * it.price}ج`).join(" | ")
+              : "";
+            rows.push([
+              workerName,
+              o.table || t.replace('table',''),
+              items,
+              o.total ?? "",
+              o.status ?? "",
+              o.notes ?? "",
+              o.archivedAt ? new Date(o.archivedAt).toLocaleString('ar-EG') : ""
+            ]);
+          }
+        }
+      }
+
+      // لو مافيش بيانات، نحط صف واحد فاضي علشان الملف يفتح عادي
+      if (rows.length === 1) rows.push(["","","","","","",""]);
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "Workers_Archive");
+      const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+      const blob = new Blob([out], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "workers_orders.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
   </script>
 </body>
 </html>
