@@ -56,6 +56,9 @@
 
   <h1>☕ لوحة المدير - إدارة الطلبات</h1>
 
+  <!-- صوت التنبيه -->
+  <audio id="alertSound" src="alert.mp3" preload="auto"></audio>
+
   <!-- زرار نداء الإدارة -->
   <button id="alert-btn" class="alert-green">📢 لا يوجد نداءات</button>
 
@@ -126,6 +129,13 @@
       if (alertTables.length > 0) {
         alertBtn.textContent = "📢 نداء من الطاولة " + alertTables.join(", ");
         alertBtn.className = "alert-red";
+
+        // ✅ تشغيل صوت التنبيه
+        const sound = document.getElementById("alertSound");
+        if (sound) {
+          sound.currentTime = 0;
+          sound.play().catch(e => console.log("Autoplay blocked:", e));
+        }
       } else {
         alertBtn.textContent = "📢 لا يوجد نداءات";
         alertBtn.className = "alert-green";
@@ -152,7 +162,9 @@
       }
     });
 
-    // إنشاء الطاولات
+    // باقي الكود كما هو (إنشاء الطاولات، المودال، تعيين الطلبات، الخ...)
+    // ... (لم يتم تغييره)
+    
     for (let i = 1; i <= 21; i++) {
       const btn = document.createElement("button");
       btn.className = "table-btn gray";
