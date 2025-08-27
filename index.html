@@ -221,18 +221,14 @@
 
     // زرار نداء الإدارة
     document.getElementById("callBtn").addEventListener("click", async () => {
-      await update(ordersRef, { alert: true, adminMessage: "" });
-      document.getElementById("message").textContent = "📢 تم إرسال نداء للإدارة";
-    });
-
-    // ✅ متابعة رسالة المدير (adminMessage)
-    onValue(ordersRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        if (data.adminMessage) {
-          document.getElementById("message").textContent = "✅ " + data.adminMessage;
-        }
+      const snap = await get(ordersRef);
+      if (snap.exists() && snap.val().alert === true) {
+        document.getElementById("message").textContent = "⚠️ الإدارة مشغولة حاليًا، حاول لاحقًا";
+        return;
       }
+
+      await update(ordersRef, { alert: true });
+      document.getElementById("message").textContent = "📢 تم إرسال نداء للإدارة";
     });
 
     // تصفير الكميات
