@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم (المدير) - نهائية</title>
+<style>
+body{
+    font-family:Arial;
+    direction:rtl;
+    background:#f2f2f2;
+    padding:20px;
+}
+h1{text-align:center; margin-bottom:20px;}
+#workersAndCall{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+#workers{ display:flex; gap:10px; }
+.worker-circle{
+    width:50px; height:50px;
+    border-radius:50%;
+    background:green;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+#callBox{
+    width:80px; height:50px;
+    background:green;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:bold;
+    border-radius:6px;
+    text-align:center;
+}
+#tables{
+    display:grid;
+    grid-template-columns: repeat(6, 60px);
+    grid-gap: 15px;
+    justify-content:center;
+}
+.table-circle{
+    width:60px; height:60px;
+    border-radius:50%;
+    background:gray;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    user-select:none;
+}
+.modal{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+.modal-content{
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    width:300px;
+}
+.close-btn{
+    background:red;
+    color:white;
+    border:none;
+    padding:5px 10px;
+    float:left;
+    cursor:pointer;
+    border-radius:4px;
+}
+.select-worker{
+    width:100%;
+    padding:8px;
+    margin-top:10px;
+}
+.send-worker-btn{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    background:orange;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>لوحة التحكم (المدير) - نهائية</h1>
+
+<div id="workersAndCall">
+    <div id="workers">
+        <div class="worker-circle" id="worker1">1</div>
+        <div class="worker-circle" id="worker2">2</div>
+        <div class="worker-circle" id="worker3">3</div>
+        <div class="worker-circle" id="worker4">4</div>
+        <div class="worker-circle" id="worker5">5</div>
+    </div>
+    <div id="callBox">نداء</div>
+</div>
+
+<div id="tables"></div>
+
+<div class="modal" id="orderModal">
+    <div class="modal-content">
+        <button class="close-btn">X</button>
+        <h3>تفاصيل الطلب – طاولة <span id="modalTableNum"></span></h3>
+        <div id="orderItems"></div>
+        <label>اختيار العامل:</label>
+        <select id="workerSelect" class="select-worker">
+            <option value="worker1">عامل 1</option>
+            <option value="worker2">عامل 2</option>
+            <option value="worker3">عامل 3</option>
+            <option value="worker4">عامل 4</option>
+            <option value="worker5">عامل 5</option>
+        </select>
+        <button class="send-worker-btn">إرسال للعامل</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCXk63HWqwQMaNAOrb5HgVRaRgF998I3jo",
+  authDomain: "kosharyapp.firebaseapp.com",
+  databaseURL: "https://kosharyapp-default-rtdb.firebaseio.com",
+  projectId: "kosharyapp",
+  storageBucket: "kosharyapp.firebasestorage.app",
+  messagingSenderId: "129714098738",
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b",
+  measurementId: "G-G8SDKEN0RW"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ===== شبكة الطاولات =====
+const tablesContainer = document.getElementById("tables");
+const totalTables = 30;
+const tableStates = [];
+for(let i=1;i<=totalTables;i++){
+    const div = document.createElement("div");
+    div.classList.add("table-circle");
+    div.innerText = i;
+    div.dataset.table=i;
+    div.dataset.state="empty";
+    div.onclick = ()=> tableClick(i);
+    tablesContainer.appendChild(div);
+    tableStates[i]=div;
+}
+
+// ===== بيانات الطلبات =====
+const ordersData = {};
+const orderKeys = {};
+
+// ===== العمال =====
+const workers = [];
+for(let i=1;i<=5;i++){
+    workers[i] = document.getElementById(`worker${i}`);
+    workers[i].dataset.busy="no";
+}
+
+// ===== مربع نداء الإدارة =====
+const callBox = document.getElementById("callBox");
+
+// ===== الاستماع للطلبات من Firebase =====
+const ordersRef = ref(db,"orders");
+onValue(ordersRef, snapshot=>{
+    const data = snapshot.val() || {};
+    Object.keys(data).forEach(key=>{
+        const order = data[key];
+        const tableNum = order.tableNum;
+        ordersData[tableNum] = order.items;
+        orderKeys[tableNum] = key;
+        const div = tableStates[tableNum];
+        if(order.status==="pending") div.style.background="red";
+        else if(order.status==="inProgress") div.style.background="orange";
+        else if(order.status === "bill") div.style.background="blue";
+        else if(order.status==="accepted") div.style.background="green";
+        div.dataset.state = order.status;
+    });
+});
+
+// ===== الاستماع لنداءات العملاء =====
+const callsRef = ref(db,"calls");
+onValue(callsRef, snapshot=>{
+    const data = snapshot.val() || {};
+    let active=false;
+    Object.values(data).forEach(c=>{
+        if(c.status==="pending") active=true;
+    });
+    callBox.style.background=active?"red":"green";
+});
+
+// ===== فتح Modal عند الضغط على طاولة =====
+function tableClick(tableNum){
+    const div = tableStates[tableNum];
+
+    // إذا الطاولة زرقاء (طلب الحساب) نعيدها للرمادي محلياً فقط
+    if(div.dataset.state === "bill"){
+        div.style.background = "gray";  // اللون الرمادي في لوحة المدير
+        div.dataset.state = "empty";   // حالة محلية نظيفة للوحة المدير
+        return; // لا نفتح الـ Modal ولا نحدّث Firebase
+    }
+
+    // إذا الطلب جديد أو جاري التحضير، نفتح الـ Modal
+    if(div.dataset.state==="pending" || div.dataset.state==="inProgress"){
+        openModal(tableNum);
+    }
+}
+
+function openModal(tableNum){
+    document.getElementById("modalTableNum").innerText=tableNum;
+    const orderDiv = document.getElementById("orderItems");
+    orderDiv.innerHTML="";
+    const order = ordersData[tableNum] || [];
+    order.forEach(item=>{
+        const p=document.createElement("p");
+        p.innerText=`${item.name} × ${item.qty}`;
+        orderDiv.appendChild(p);
+    });
+    document.getElementById("orderModal").style.display="flex";
+}
+
+// ===== إغلاق Modal =====
+document.querySelector(".close-btn").addEventListener("click", ()=>{
+    document.getElementById("orderModal").style.display="none";
+});
+
+// ===== إرسال الطلب للعامل =====
+document.querySelector(".send-worker-btn").addEventListener("click", ()=>{
+    const tableNum = parseInt(document.getElementById("modalTableNum").innerText);
+    const workerId = document.getElementById("workerSelect").value;
+
+    const div = tableStates[tableNum];
+    div.style.background="orange";
+    div.dataset.state="inProgress";
+
+    const workerDiv = document.getElementById(workerId);
+    workerDiv.style.background="red";
+    workerDiv.dataset.busy="yes";
+
+    const key = orderKeys[tableNum];
+    if(key){
+        update(ref(db,"orders/"+key),{
+            status:"inProgress",
+            workerNum: workerId
+        });
+    }
+    console.log(`تم إرسال الطلب للطاولة ${tableNum} إلى العامل ${workerDiv.innerText}`);
+});
+</script>
+
+</body>
+</html>

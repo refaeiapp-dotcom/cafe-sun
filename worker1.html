@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة العامل</title>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body{
+    font-family:Arial;
+    direction:rtl;
+    background:#f2f2f2;
+    padding:20px;
+}
+h1{text-align:center; margin-bottom:20px;}
+.order-card{
+    background:#fff;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:6px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+.order-card p{margin:5px 0;}
+button{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    margin-top:8px;
+    color:white;
+}
+.complete-btn{background:green;}
+.pdf-btn{background:#0d6efd;}
+</style>
+</head>
+<body>
+
+<h1>لوحة العامل</h1>
+<div id="myOrdersContainer">
+    <p>لا توجد طلبات حالياً</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// ===== Firebase =====
+const firebaseConfig = {
+  apiKey: "AIzaSyCXk63HWqwQMaNAOrb5HgVRaRgF998I3jo",
+  authDomain: "kosharyapp.firebaseapp.com",
+  databaseURL: "https://kosharyapp-default-rtdb.firebaseio.com",
+  projectId: "kosharyapp",
+  storageBucket: "kosharyapp.firebasestorage.app",
+  messagingSenderId: "129714098738",
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ===== معرف العامل =====
+const myWorkerId = "worker1";
+
+// ===== المراقبة =====
+const ordersRef = ref(db,"orders");
+
+onValue(ordersRef, snapshot=>{
+    const data = snapshot.val() || {};
+    const myOrders = [];
+    Object.keys(data).forEach(key=>{
+        const order = data[key];
+        if(order.workerNum === myWorkerId && order.status === "inProgress"){
+            myOrders.push({...order, key});
+        }
+    });
+    renderMyOrders(myOrders);
+});
+
+function renderMyOrders(orders){
+    const ordersDiv = document.getElementById("myOrdersContainer");
+    ordersDiv.innerHTML = "";
+    if(orders.length===0){
+        ordersDiv.innerHTML="<p>لا توجد طلبات حالياً</p>";
+        return;
+    }
+
+    orders.forEach(o=>{
+        const div = document.createElement("div");
+        div.classList.add("order-card");
+
+        div.innerHTML = `
+            <p><strong>طاولة ${o.tableNum}</strong></p>
+            ${o.items.map(i=>`<p>${i.name} × ${i.qty}</p>`).join('')}
+            <button class="pdf-btn" onclick='makePDF(${JSON.stringify(o)})'>
+                تحويل إلى PDF ومشاركة
+            </button>
+            <button class="complete-btn" onclick="finishOrder('${o.key}')">
+                إتمام الطلب
+            </button>
+        `;
+        ordersDiv.appendChild(div);
+    });
+}
+
+// ===== إنشاء PDF =====
+window.makePDF = function(order){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let y = 15;
+    doc.setFontSize(14);
+    doc.text(`طلب طاولة رقم ${order.tableNum}`, 10, y);
+    y += 10;
+
+    doc.setFontSize(11);
+    order.items.forEach(item=>{
+        doc.text(`${item.name} × ${item.qty}`, 10, y);
+        y += 8;
+    });
+
+    y += 5;
+    doc.text(`التاريخ: ${new Date().toLocaleString()}`, 10, y);
+
+    const fileName = `table_${order.tableNum}.pdf`;
+    doc.save(fileName);
+
+    // تنبيه بسيط للعامل
+    alert("تم إنشاء PDF — اختر واتساب للمشاركة");
+};
+
+// ===== إتمام الطلب =====
+window.finishOrder = function(orderKey){
+    update(ref(db,"orders/"+orderKey),{ status:"accepted" })
+    .then(()=> console.log("تم إتمام الطلب"))
+    .catch(err=> console.error(err));
+};
+</script>
+
+</body>
+</html>

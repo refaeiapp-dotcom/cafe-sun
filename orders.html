@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة حصر الطلبات</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body{
+    font-family:Arial;
+    direction:rtl;
+    background:#f9f9f9;
+    padding:20px;
+}
+h1{
+    text-align:center; margin-bottom:20px;
+}
+.buttons{
+    margin-bottom:20px;
+    display:flex;
+    gap:10px;
+}
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:6px;
+    color:white;
+    cursor:pointer;
+}
+#ordersContainer{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.order-item{
+    padding:12px;
+    border-radius:6px;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    font-size:14px;
+}
+.red{background:red;}
+.green{background:green;}
+.orange{background:orange;}
+.blue{background:blue;}
+</style>
+</head>
+<body>
+
+<h1>لوحة حصر الطلبات</h1>
+<div class="buttons">
+    <button id="exportPDF" style="background:blue;">إرسال PDF</button>
+    <button id="clearOrders" style="background:red;">تصفير كل الطلبات</button>
+</div>
+
+<div id="ordersContainer"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// ===== Firebase Config =====
+const firebaseConfig = {
+  apiKey: "AIzaSyCXk63HWqwQMaNAOrb5HgVRaRgF998I3jo",
+  authDomain: "kosharyapp.firebaseapp.com",
+  databaseURL: "https://kosharyapp-default-rtdb.firebaseio.com",
+  projectId: "kosharyapp",
+  storageBucket: "kosharyapp.firebasestorage.app",
+  messagingSenderId: "129714098738",
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b",
+  measurementId: "G-G8SDKEN0RW"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const ordersRef = ref(db,"orders");
+
+const ordersContainer = document.getElementById("ordersContainer");
+const existingOrders = {}; // لتتبع الطلبات المعروضة بالفعل
+
+// ===== عرض الطلبات بدون حذف القديمة =====
+onValue(ordersRef, snapshot=>{
+    const data = snapshot.val() || {};
+    Object.keys(data).forEach(key=>{
+        const o = data[key];
+        if(!existingOrders[key]) {  // إذا الطلب جديد
+            let total = 0;
+            if(o.items) o.items.forEach(i => total += i.qty*i.price);
+
+            const div = document.createElement("div");
+            div.classList.add("order-item");
+            // تحديد اللون حسب الحالة
+            if(o.status==="pending") div.classList.add("red");
+            else if(o.status==="inProgress") div.classList.add("orange");
+            else if(o.status==="accepted") div.classList.add("green");
+            else if(o.status==="bill") div.classList.add("blue");
+
+            div.innerHTML = `<strong>طاولة ${o.tableNum} - عامل ${o.workerNum || "-"}</strong>
+                <span>${o.items.map(i=>i.name+' × '+i.qty).join(', ')}</span>
+                <span>المجموع: ${total} جنيه</span>`;
+            ordersContainer.appendChild(div);
+            existingOrders[key] = div; // نحفظ المرجع لتحديثه لاحقاً إذا تغير
+        }
+    });
+});
+
+// ===== زر تصفير الطلبات =====
+document.getElementById("clearOrders").onclick = function(){
+    if(confirm("هل أنت متأكد من مسح كل الطلبات؟")){
+        remove(ordersRef)
+        .then(()=>{
+            console.log("تم مسح كل الطلبات من Firebase");
+            ordersContainer.innerHTML = ""; // إعادة لوحة الحصر فارغة
+            for(let key in existingOrders) delete existingOrders[key]; // تنظيف المراجع
+        })
+        .catch(err => console.error("خطأ أثناء حذف الطلبات:", err));
+    }
+}
+
+// ===== زر تصدير PDF =====
+document.getElementById("exportPDF").onclick = function(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 10;
+
+    onValue(ordersRef, snapshot=>{
+        const data = snapshot.val() || {};
+        Object.keys(data).forEach(key=>{
+            const o = data[key];
+            const total = o.items.reduce((sum, i) => sum + i.qty*i.price, 0);
+            const text = `طاولة ${o.tableNum} - عامل ${o.workerNum || "-"}: ${o.items.map(i=>i.name+' × '+i.qty).join(', ')} | المجموع: ${total} جنيه`;
+            doc.text(text, 10, y);
+            y += 10;
+        });
+        doc.save("Orders.pdf");
+    }, {onlyOnce:true});
+}
+</script>
+</body>
+</html>
