@@ -14,52 +14,53 @@ body{
 
 h1{
     text-align:center;
-    font-size:22px;
+    font-size:24px;
     margin-bottom:15px;
 }
 
 /* عنصر الصنف */
 .item{
     background:#fff;
-    padding:8px 10px;
-    margin-bottom:6px;
+    padding:10px 12px;
+    margin-bottom:8px;
     border-radius:6px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start;
+    gap:8px; /* تقارب الاسم والكمية */
 }
 
 /* اسم الصنف */
 .item span{
-    font-size:17px;
-    font-weight:600;
+    font-size:19px;
+    font-weight:700;
+    flex:1;
 }
 
 /* اختيار الكمية */
 select{
-    padding:6px;
-    font-size:16px;
+    padding:6px 8px;
+    font-size:18px;
     min-width:55px;
-    margin-right:10px;
 }
 
 /* المجموع */
 .total{
     background:#fff;
-    padding:12px;
-    margin-top:12px;
+    padding:14px;
+    margin-top:14px;
     border-radius:6px;
     text-align:center;
-    font-size:20px;
+    font-size:22px;
     font-weight:bold;
 }
 
 /* الأزرار */
 button{
     width:100%;
-    padding:14px;
-    margin-top:8px;
-    font-size:18px;
+    padding:16px;
+    margin-top:10px;
+    font-size:20px;
     border:none;
     border-radius:6px;
     color:#fff;
@@ -72,16 +73,22 @@ button{
 .yellow{background:#ffc107;}
 
 .status-text{
-    font-size:15px;
+    font-size:16px;
     text-align:center;
-    margin-bottom:4px;
+    margin-bottom:6px;
     color:#444;
 }
 
-/* تحسين للموبايل */
+/* تحسين قوي للموبايل */
 @media (max-width:600px){
     body{ padding:10px; }
-    h1{ font-size:20px; }
+    h1{ font-size:22px; }
+
+    .item span{ font-size:20px; }
+    select{ font-size:19px; }
+
+    button{ font-size:21px; }
+    .total{ font-size:23px; }
 }
 </style>
 
@@ -133,7 +140,7 @@ button{
 
 <div class="status-text">📤 يتم الإرسال إلى لوحة التحكم (المدير)</div>
 
-<!-- Firebase -->
+<!-- Firebase (كما هو بدون أي تعديل) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
