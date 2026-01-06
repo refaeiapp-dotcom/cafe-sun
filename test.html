@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>طلب مشروبات – طاولة</title>
 
 <style>
@@ -10,57 +10,81 @@ body{
     direction:rtl;
     background:#f2f2f2;
     padding:15px;
+    font-size:16px; /* زيادة حجم الخط العام */
+}
+
+/* تكبير الخط على الموبايل */
+@media (max-width:600px){
+    body { font-size:20px; }
+    h1 { font-size:24px; }
+    /* جعل العناصر أكبر قليلاً على الموبايل */
+    select {
+        font-size:18px;
+        min-width:65px;
+    }
+    button {
+        font-size:20px;
+        padding:16px;
+    }
+    .item span {
+        font-size:20px;
+    }
+    .total {
+        font-size:22px;
+    }
 }
 
 h1{
     text-align:center;
-    font-size:24px;
+    font-size:22px;
     margin-bottom:15px;
 }
 
 /* عنصر الصنف */
 .item{
     background:#fff;
-    padding:10px 12px;
-    margin-bottom:8px;
+    padding:8px 10px;
+    margin-bottom:6px;
     border-radius:6px;
     display:flex;
     align-items:center;
-    justify-content:flex-start;
-    gap:8px; /* تقارب الاسم والكمية */
+    justify-content:space-between;
+    flex-wrap:wrap; /* يسمح بلف العناصر على الشاشات الصغيرة */
 }
 
 /* اسم الصنف */
 .item span{
-    font-size:19px;
-    font-weight:700;
-    flex:1;
+    font-size:17px;
+    font-weight:600;
+    flex:1; /* يسمح بتمديد النص ليأخذ المساحة */
 }
 
 /* اختيار الكمية */
 select{
-    padding:6px 8px;
-    font-size:18px;
+    padding:6px;
+    font-size:16px;
     min-width:55px;
+    margin-right:10px;
+    margin-top:5px;
 }
 
 /* المجموع */
 .total{
     background:#fff;
-    padding:14px;
-    margin-top:14px;
+    padding:12px;
+    margin-top:12px;
     border-radius:6px;
     text-align:center;
-    font-size:22px;
+    font-size:20px;
     font-weight:bold;
 }
 
 /* الأزرار */
 button{
     width:100%;
-    padding:16px;
-    margin-top:10px;
-    font-size:20px;
+    padding:14px;
+    margin-top:8px;
+    font-size:18px;
     border:none;
     border-radius:6px;
     color:#fff;
@@ -73,22 +97,10 @@ button{
 .yellow{background:#ffc107;}
 
 .status-text{
-    font-size:16px;
+    font-size:15px;
     text-align:center;
-    margin-bottom:6px;
+    margin-bottom:4px;
     color:#444;
-}
-
-/* تحسين قوي للموبايل */
-@media (max-width:600px){
-    body{ padding:10px; }
-    h1{ font-size:22px; }
-
-    .item span{ font-size:20px; }
-    select{ font-size:19px; }
-
-    button{ font-size:21px; }
-    .total{ font-size:23px; }
 }
 </style>
 
@@ -140,7 +152,7 @@ button{
 
 <div class="status-text">📤 يتم الإرسال إلى لوحة التحكم (المدير)</div>
 
-<!-- Firebase (كما هو بدون أي تعديل) -->
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
