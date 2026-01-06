@@ -3,10 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>لوحة العامل</title>
-
-<!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
 body{
     font-family:Arial;
@@ -23,17 +19,16 @@ h1{text-align:center; margin-bottom:20px;}
     box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 .order-card p{margin:5px 0;}
-button{
+button.complete-btn{
     width:100%;
     padding:10px;
+    background:green;
+    color:white;
     border:none;
     border-radius:6px;
     cursor:pointer;
-    margin-top:8px;
-    color:white;
+    margin-top:10px;
 }
-.complete-btn{background:green;}
-.pdf-btn{background:#0d6efd;}
 </style>
 </head>
 <body>
@@ -55,13 +50,16 @@ const firebaseConfig = {
   projectId: "kosharyapp",
   storageBucket: "kosharyapp.firebasestorage.app",
   messagingSenderId: "129714098738",
-  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b"
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b",
+  measurementId: "G-G8SDKEN0RW"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ===== معرف العامل =====
-const myWorkerId = "worker1";
+// ===== معرف العامل الحالي =====
+const urlParams = new URLSearchParams(window.location.search);
+const myWorkerId = urlParams.get("worker") || "worker1";
+ // غيّر حسب كل عامل
 
 // ===== المراقبة =====
 const ordersRef = ref(db,"orders");
@@ -85,50 +83,15 @@ function renderMyOrders(orders){
         ordersDiv.innerHTML="<p>لا توجد طلبات حالياً</p>";
         return;
     }
-
     orders.forEach(o=>{
         const div = document.createElement("div");
         div.classList.add("order-card");
-
-        div.innerHTML = `
-            <p><strong>طاولة ${o.tableNum}</strong></p>
-            ${o.items.map(i=>`<p>${i.name} × ${i.qty}</p>`).join('')}
-            <button class="pdf-btn" onclick='makePDF(${JSON.stringify(o)})'>
-                تحويل إلى PDF ومشاركة
-            </button>
-            <button class="complete-btn" onclick="finishOrder('${o.key}')">
-                إتمام الطلب
-            </button>
-        `;
+        div.innerHTML = `<p>طاولة ${o.tableNum}</p>`+
+                        o.items.map(i=>`<p>${i.name} × ${i.qty}</p>`).join('')+
+                        `<button class="complete-btn" onclick="finishOrder('${o.key}')">إتمام الطلب</button>`;
         ordersDiv.appendChild(div);
     });
 }
-
-// ===== إنشاء PDF =====
-window.makePDF = function(order){
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    let y = 15;
-    doc.setFontSize(14);
-    doc.text(`طلب طاولة رقم ${order.tableNum}`, 10, y);
-    y += 10;
-
-    doc.setFontSize(11);
-    order.items.forEach(item=>{
-        doc.text(`${item.name} × ${item.qty}`, 10, y);
-        y += 8;
-    });
-
-    y += 5;
-    doc.text(`التاريخ: ${new Date().toLocaleString()}`, 10, y);
-
-    const fileName = `table_${order.tableNum}.pdf`;
-    doc.save(fileName);
-
-    // تنبيه بسيط للعامل
-    alert("تم إنشاء PDF — اختر واتساب للمشاركة");
-};
 
 // ===== إتمام الطلب =====
 window.finishOrder = function(orderKey){
