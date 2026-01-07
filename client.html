@@ -2,89 +2,54 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>طلب مشروبات – طاولة</title>
-
+<title>طلب كشري – طاولة</title>
 <style>
 body{
     font-family:Arial;
     direction:rtl;
     background:#f2f2f2;
-    padding:15px;
+    padding:20px;
 }
-
-h1{
-    text-align:center;
-    font-size:22px;
-    margin-bottom:15px;
-}
-
-/* عنصر الصنف */
+h1{text-align:center;}
 .item{
     background:#fff;
-    padding:8px 10px;
-    margin-bottom:6px;
+    padding:10px;
+    margin-bottom:8px;
     border-radius:6px;
     display:flex;
-    align-items:center;
     justify-content:space-between;
+    align-items:center;
 }
-
-/* اسم الصنف */
-.item span{
-    font-size:17px;
-    font-weight:600;
-}
-
-/* اختيار الكمية */
-select{
-    padding:6px;
-    font-size:16px;
-    min-width:55px;
-    margin-right:10px;
-}
-
-/* المجموع */
+select{padding:5px;}
 .total{
     background:#fff;
-    padding:12px;
-    margin-top:12px;
+    padding:15px;
+    margin-top:15px;
     border-radius:6px;
     text-align:center;
-    font-size:20px;
+    font-size:18px;
     font-weight:bold;
 }
-
-/* الأزرار */
 button{
     width:100%;
-    padding:14px;
-    margin-top:8px;
-    font-size:18px;
+    padding:15px;
+    margin-top:10px;
+    font-size:17px;
     border:none;
     border-radius:6px;
     color:#fff;
     cursor:pointer;
 }
-
-/* حالات الأزرار */
-.pending{background:#dc3545;}
-.accepted{background:#28a745;}
-.yellow{background:#ffc107;}
-
+.pending{background:#dc3545;} /* أحمر */
+.accepted{background:#28a745;} /* أخضر */
+.yellow{background:#ffc107;} /* أصفر */
 .status-text{
-    font-size:15px;
+    font-size:14px;
     text-align:center;
-    margin-bottom:4px;
+    margin-bottom:5px;
     color:#444;
 }
-
-/* تحسين للموبايل */
-@media (max-width:600px){
-    body{ padding:10px; }
-    h1{ font-size:20px; }
-}
 </style>
-
 </head>
 <body>
 
@@ -93,30 +58,84 @@ button{
 <!-- الأصناف -->
 <div class="item"><span>شاي (20)</span>
 <select data-price="45"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>قهوة (25)</span>
 <select data-price="23"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>قهوة فرنساوي (45)</span>
 <select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>نسون (25)</span>
 <select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>حلية (25)</span>
 <select data-price="10"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>كاكاو (45)</span>
 <select data-price="50"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>سحلب سادة (50)</span>
 <select data-price="38"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>سحلب بالمكسرات (70)</span>
 <select data-price="20"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-
 <div class="item"><span>سحلب فواكه (70)</span>
 <select data-price="12"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>هوت سيدر (60)</span>
+<select data-price="22"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>لاتيه بندق (60)</span>
+<select data-price="45"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>لاتيه فانيليا (60)</span>
+<select data-price="23"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>لاتيه كلاسك (60)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>بريل (40)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>مياه (10)</span>
+<select data-price="10"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>بيبسي (40)</span>
+<select data-price="50"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ميرندا (40)</span>
+<select data-price="38"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>سفن اب (40)</span>
+<select data-price="20"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>فيروز (40)</span>
+<select data-price="12"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>استنج (40)</span>
+<select data-price="22"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>عصير برتقال (80)</span>
+<select data-price="45"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>عصير مانجو (80)</span>
+<select data-price="23"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>عصير فراولة (80)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>عناب (50)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>زبادي (80)</span>
+<select data-price="10"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>موز باللبن  (80)</span>
+<select data-price="50"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>زبادي بالفواكه (80)</span>
+<select data-price="38"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ايس كوفي (70)</span>
+<select data-price="20"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ايس لاتيه (70)</span>
+<select data-price="12"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>اوريو (70)</span>
+<select data-price="22"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ريد بول (100)</span>
+<select data-price="45"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ليمون نعناع (50)</span>
+<select data-price="23"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>فروت سلاط (120)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>ايس شيكولاتة (80)</span>
+<select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>هوت شيكولاتة  (80)</span>
+<select data-price="10"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>موهيتو (70)</span>
+<select data-price="50"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>حجر قص (20)</span>
+<select data-price="38"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>حجر سلوم (20)</span>
+<select data-price="20"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>حجر فواكه (100)</span>
+<select data-price="12"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="item"><span>حجر مكس (100)</span>
+<select data-price="22"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
 
 <div class="total">
 💰 المجموع: <span id="total">0</span> جنيه
@@ -133,7 +152,6 @@ button{
 
 <div class="status-text">📤 يتم الإرسال إلى لوحة التحكم (المدير)</div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -145,32 +163,151 @@ const firebaseConfig = {
   projectId: "kosharyapp",
   storageBucket: "kosharyapp.firebasestorage.app",
   messagingSenderId: "129714098738",
-  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b"
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b",
+  measurementId: "G-G8SDKEN0RW"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const urlParams = new URLSearchParams(window.location.search);
 const tableNum = urlParams.get("table") || 1;
-document.getElementById("tableTitle").innerText =
-`قائمة الطلبات – طاولة رقم ${tableNum}`;
+document.getElementById("tableTitle").innerText = `قائمة الطلبات – طاولة رقم ${tableNum}`;
 
 window.onload = function(){
     const selects = document.querySelectorAll("select");
     const totalSpan = document.getElementById("total");
 
+    // تحديث المجموع عند اختيار الأصناف
     selects.forEach(s=>{
-        s.onchange = ()=>{
-            let total=0;
+        s.onchange = ()=> {
+            let total = 0;
             selects.forEach(el=>{
                 total += el.dataset.price * el.value;
             });
             totalSpan.innerText = total;
         };
     });
+
+    function waitManager(btn,statusDiv){
+        btn.classList.add("pending");
+        btn.classList.remove("accepted","yellow");
+        document.getElementById(statusDiv).innerText = "⏳ في انتظار استجابة المدير...";
+    }
+
+    function updateButtonStatus(btn,statusDiv,status){
+        btn.classList.remove("pending","accepted","yellow");
+        if(status==="pending") btn.classList.add("pending");
+        else if(status==="accepted") btn.classList.add("accepted");
+        else if(status==="inProgress") btn.classList.add("yellow");
+
+        let textMap = {
+            pending:"⏳ في انتظار استجابة المدير...",
+            accepted:"✔️ تم تأكيد الطلب",
+            inProgress:"🔄 جاري التحضير"
+        };
+        document.getElementById(statusDiv).innerText = textMap[status] || "";
+    }
+
+    // إرسال الطلب
+    document.getElementById("orderBtn").onclick = function(){
+        waitManager(this,"orderStatus");
+        const items = [];
+        selects.forEach(el=>{
+            if(el.value>0){
+                items.push({
+                    name: el.parentElement.querySelector("span").innerText.split(" (")[0],
+                    qty: parseInt(el.value),
+                    price: parseInt(el.dataset.price)
+                });
+            }
+        });
+        if(items.length===0){alert("اختر على الأقل صنف واحد"); return;}
+
+        const orderRef = push(ref(db, "orders"));
+        set(orderRef,{
+            tableNum: tableNum,
+            workerNum: null,
+            items: items,
+            totalPrice: items.reduce((a,b)=>a+b.price*b.qty,0),
+            status: "pending"
+        }).then(()=> updateButtonStatus(document.getElementById("orderBtn"),"orderStatus","pending"))
+          .catch(err=>{console.error(err); alert("حدث خطأ أثناء الإرسال");});
+    };
+
+    // طلب الحساب
+    document.getElementById("billBtn").onclick = function(){
+        waitManager(this,"billStatus");
+        const billRef = push(ref(db, "bills"));
+        set(billRef,{
+            tableNum: tableNum,
+            status:"pending"
+        });
+
+        const ordersRef = ref(db,"orders");
+        onValue(ordersRef, snapshot=>{
+            const data = snapshot.val() || {};
+            Object.keys(data).forEach(key=>{
+                if(data[key].tableNum == tableNum){
+                    update(ref(db,"orders/"+key), { status:"bill" });
+                }
+            });
+        }, {onlyOnce:true});
+    };
+
+    // نداء الإدارة (طوارئ)
+    const callBtn = document.getElementById("callBtn");
+    const callStatus = document.getElementById("callStatus");
+
+    callBtn.onclick = function(){
+        const callRef = push(ref(db, "calls"));
+        set(callRef,{
+            tableNum: tableNum,
+            status:"pending"
+        });
+        callBtn.classList.remove("accepted","yellow","pending");
+        callBtn.classList.add("pending"); // أحمر
+        callStatus.innerText = `⚠️ نداء طوارئ من طاولة ${tableNum}`;
+    };
+
+    // الاستماع لتحديث حالة الطلب
+    const ordersRef = ref(db, "orders");
+    onValue(ordersRef, snapshot=>{
+        snapshot.forEach(child=>{
+            const order = child.val();
+            if(order.tableNum==tableNum){
+                const orderBtn = document.getElementById("orderBtn");
+
+                if(order.status === "bill"){
+                    orderBtn.classList.remove("accepted","yellow","pending");
+                    orderBtn.classList.add("pending");
+                    document.getElementById("orderStatus").innerText = "⏳ في انتظار استجابة المدير...";
+                } else {
+                    updateButtonStatus(orderBtn,"orderStatus",order.status);
+                }
+            }
+        });
+    });
+
+    // الاستماع لتحديث نداءات الطوارئ من المدير
+    const callsRef = ref(db, "calls");
+    onValue(callsRef, snapshot=>{
+        const data = snapshot.val() || {};
+        let activeCall = false;
+        Object.values(data).forEach(c=>{
+            if(c.status === "pending" && c.tableNum == tableNum) activeCall = true;
+        });
+
+        if(activeCall){
+            callBtn.classList.remove("accepted","yellow");
+            callBtn.classList.add("pending"); // أحمر
+            callStatus.innerText = `⚠️ نداء طوارئ من طاولة ${tableNum}`;
+        } else {
+            callBtn.classList.remove("pending","yellow");
+            callBtn.classList.add("accepted"); // أخضر
+            callStatus.innerText = "✅ تم حل الطوارئ";
+        }
+    });
 };
 </script>
-
 </body>
 </html>
