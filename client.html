@@ -2,80 +2,121 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>طلب كشري – طاولة</title>
+<title>طلب مشروبات – طاولة</title>
+
 <style>
 body{
     font-family:Arial;
     direction:rtl;
     background:#f2f2f2;
-    padding:20px;
+    padding:15px;
 }
-h1{text-align:center;}
+
+h1{
+    text-align:center;
+    font-size:22px;
+    margin-bottom:15px;
+}
+
+/* عنصر الصنف */
 .item{
     background:#fff;
-    padding:10px;
-    margin-bottom:8px;
+    padding:8px 10px;
+    margin-bottom:6px;
     border-radius:6px;
     display:flex;
-    justify-content:space-between;
     align-items:center;
+    justify-content:space-between;
 }
-select{padding:5px;}
+
+/* اسم الصنف */
+.item span{
+    font-size:17px;
+    font-weight:600;
+}
+
+/* اختيار الكمية */
+select{
+    padding:6px;
+    font-size:16px;
+    min-width:55px;
+    margin-right:10px;
+}
+
+/* المجموع */
 .total{
     background:#fff;
-    padding:15px;
-    margin-top:15px;
+    padding:12px;
+    margin-top:12px;
     border-radius:6px;
     text-align:center;
-    font-size:18px;
+    font-size:20px;
     font-weight:bold;
 }
+
+/* الأزرار */
 button{
     width:100%;
-    padding:15px;
-    margin-top:10px;
-    font-size:17px;
+    padding:14px;
+    margin-top:8px;
+    font-size:18px;
     border:none;
     border-radius:6px;
     color:#fff;
     cursor:pointer;
 }
-.pending{background:#dc3545;} /* أحمر */
-.accepted{background:#28a745;} /* أخضر */
-.yellow{background:#ffc107;} /* أصفر */
+
+/* حالات الأزرار */
+.pending{background:#dc3545;}
+.accepted{background:#28a745;}
+.yellow{background:#ffc107;}
+
 .status-text{
-    font-size:14px;
+    font-size:15px;
     text-align:center;
-    margin-bottom:5px;
+    margin-bottom:4px;
     color:#444;
 }
+
+/* تحسين للموبايل */
+@media (max-width:600px){
+    body{ padding:10px; }
+    h1{ font-size:20px; }
+}
 </style>
+
 </head>
 <body>
 
 <h1 id="tableTitle">قائمة الطلبات – طاولة رقم</h1>
 
 <!-- الأصناف -->
-<div class="item"><span>علبة كشري بيج ستار (45)</span>
+<div class="item"><span>شاي (20)</span>
 <select data-price="45"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>علبة كشري صغيرة (23)</span>
+
+<div class="item"><span>قهوة (25)</span>
 <select data-price="23"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>طاجن مكرونة بالفراخ (55)</span>
+
+<div class="item"><span>قهوة فرنساوي (45)</span>
 <select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>علبة كشري سوبر ستار (55)</span>
+
+<div class="item"><span>نسون (25)</span>
 <select data-price="55"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>توست كرسبي (10)</span>
+
+<div class="item"><span>حلية (25)</span>
 <select data-price="10"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>طاجن مكرونة باللحمة (50)</span>
+
+<div class="item"><span>كاكاو (45)</span>
 <select data-price="50"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>علبة كشري ستار بلس (38)</span>
+
+<div class="item"><span>سحلب سادة (50)</span>
 <select data-price="38"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>أرز باللبن صغير (20)</span>
+
+<div class="item"><span>سحلب بالمكسرات (70)</span>
 <select data-price="20"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>سلطة خضراء (12)</span>
+
+<div class="item"><span>سحلب فواكه (70)</span>
 <select data-price="12"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="item"><span>كريم كراميل (22)</span>
-<select data-price="22"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
 
 <div class="total">
 💰 المجموع: <span id="total">0</span> جنيه
@@ -92,7 +133,7 @@ button{
 
 <div class="status-text">📤 يتم الإرسال إلى لوحة التحكم (المدير)</div>
 
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -104,21 +145,21 @@ const firebaseConfig = {
   projectId: "kosharyapp",
   storageBucket: "kosharyapp.firebasestorage.app",
   messagingSenderId: "129714098738",
-  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b",
-  measurementId: "G-G8SDKEN0RW"
+  appId: "1:129714098738:web:aa5c0aab07191dfa2be22b"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const urlParams = new URLSearchParams(window.location.search);
 const tableNum = urlParams.get("table") || 1;
-document.getElementById("tableTitle").innerText = `قائمة الطلبات – طاولة رقم ${tableNum}`;
+document.getElementById("tableTitle").innerText =
+`قائمة الطلبات – طاولة رقم ${tableNum}`;
 
 window.onload = function(){
     const selects = document.querySelectorAll("select");
     const totalSpan = document.getElementById("total");
 
-    // تحديث المجموع
     selects.forEach(s=>{
         s.onchange = ()=>{
             let total=0;
@@ -128,106 +169,8 @@ window.onload = function(){
             totalSpan.innerText = total;
         };
     });
-
-    function waitManager(btn,statusDiv){
-        btn.classList.add("pending");
-        btn.classList.remove("accepted","yellow");
-        document.getElementById(statusDiv).innerText = "⏳ في انتظار استجابة المدير...";
-    }
-
-    function updateButtonStatus(btn,statusDiv,status){
-        btn.classList.remove("pending","accepted","yellow");
-        if(status==="pending") btn.classList.add("pending");
-        else if(status==="accepted") btn.classList.add("accepted");
-        else if(status==="inProgress") btn.classList.add("yellow");
-
-        let textMap = {
-            pending:"⏳ في انتظار استجابة المدير...",
-            accepted:"✔️ تم تأكيد الطلب",
-            inProgress:"🔄 جاري التحضير"
-        };
-        document.getElementById(statusDiv).innerText = textMap[status] || "";
-    }
-
-    // إرسال الطلب
-    document.getElementById("orderBtn").onclick = function(){
-        waitManager(this,"orderStatus");
-        const items = [];
-        selects.forEach(el=>{
-            if(el.value>0){
-                items.push({
-                    name: el.parentElement.querySelector("span").innerText.split(" (")[0],
-                    qty: parseInt(el.value),
-                    price: parseInt(el.dataset.price)
-                });
-            }
-        });
-        if(items.length===0){alert("اختر على الأقل صنف واحد"); return;}
-
-        const orderRef = push(ref(db, "pendingOrders"));
-
-        set(orderRef,{
-            tableNum: tableNum,
-            workerNum: null,
-            items: items,
-            totalPrice: items.reduce((a,b)=>a+b.price*b.qty,0),
-            status: "pending"
-        }).then(()=> updateButtonStatus(document.getElementById("orderBtn"),"orderStatus","pending"))
-          .catch(err=>{console.error(err); alert("حدث خطأ أثناء الإرسال");});
-    };
-
-    // طلب الحساب
-    document.getElementById("billBtn").onclick = function(){
-        waitManager(this,"billStatus");
-        const billRef = push(ref(db, "bills"));
-        set(billRef,{
-            tableNum: tableNum,
-            status:"pending"
-        });
-
-        const ordersRef = ref(db, "pendingOrders")
-;
-        onValue(ordersRef, snapshot=>{
-            const data = snapshot.val() || {};
-            Object.keys(data).forEach(key=>{
-                if(data[key].tableNum == tableNum){
-                    update(ref(db,"orders/"+key), { status:"bill" });
-                }
-            });
-        }, {onlyOnce:true});
-    };
-
-    // نداء الإدارة
-    document.getElementById("callBtn").onclick = function(){
-        waitManager(this,"callStatus");
-        const callRef = push(ref(db, "calls"));
-        set(callRef,{
-            tableNum:tableNum,
-            status:"pending"
-        });
-    };
-
-    // ======== الاستماع لتحديث الطلبات ========
-    const ordersRef = ref(db, "orders");
-    onValue(ordersRef, snapshot=>{
-        snapshot.forEach(child=>{
-            const order = child.val();
-            if(order.tableNum==tableNum){
-                const orderBtn = document.getElementById("orderBtn");
-
-                // إذا الحالة bill (أزرق)، نعيد اللون الأحمر محليًا فقط
-                if(order.status === "bill"){
-                    orderBtn.classList.remove("accepted","yellow","pending");
-                    orderBtn.classList.add("pending"); // اللون الأحمر
-                    document.getElementById("orderStatus").innerText = "⏳ في انتظار استجابة المدير...";
-                } else {
-                    updateButtonStatus(orderBtn,"orderStatus",order.status);
-                }
-            }
-        });
-    });
-
 };
 </script>
+
 </body>
 </html>
