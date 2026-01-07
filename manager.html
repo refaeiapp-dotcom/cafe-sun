@@ -192,7 +192,20 @@ onValue(ordersRef, snapshot=>{
         if(order.status==="pending") div.style.background="red";
         else if(order.status==="inProgress") div.style.background="orange";
         else if(order.status === "bill") div.style.background="blue";
-        else if(order.status==="accepted") div.style.background="green";
+        else if(order.status==="accepted"){
+    div.style.background="green";
+
+    // ===== تحرير العامل =====
+    if(order.workerNum){
+        const workerIndex = order.workerNum.replace("worker","");
+        const workerDiv = workers[workerIndex];
+        if(workerDiv){
+            workerDiv.style.background = "green";
+            workerDiv.dataset.busy = "no";
+        }
+    }
+}
+
         div.dataset.state = order.status;
     });
 });
