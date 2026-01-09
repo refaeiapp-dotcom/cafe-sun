@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة العامل</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    font-family: Arial;
+    direction: rtl;
+    background:#f2f2f2;
+    padding:20px;
+}
+h1{text-align:center}
+
+.card{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 0 8px rgba(0,0,0,.1);
+}
+.status{
+    font-weight:bold;
+    margin-bottom:10px;
+}
+button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+}
+.start{background:#28a745;color:#fff}
+.done{background:#007bff;color:#fff}
+.finish{background:#6c757d;color:#fff}
+</style>
+</head>
+
+<body>
+
+<h1>لوحة العامل</h1>
+<p id="workerInfo"></p>
+
+<div id="tasks"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
+  authDomain: "hotel-service-d1e98.firebaseapp.com",
+  databaseURL: "https://hotel-service-d1e98-default-rtdb.firebaseio.com",
+  projectId: "hotel-service-d1e98",
+  storageBucket: "hotel-service-d1e98.firebasestorage.app",
+  messagingSenderId: "45614234588",
+  appId: "1:45614234588:web:8020bc86650e88d8a56d19"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// قراءة رقم العامل من الرابط
+const params = new URLSearchParams(window.location.search);
+const workerId = params.get("worker");
+
+const workerInfo = document.getElementById("workerInfo");
+const tasksDiv = document.getElementById("tasks");
+
+if(!workerId){
+    workerInfo.textContent = "❌ رقم العامل غير موجود في الرابط";
+    throw new Error("No worker id");
+}
+
+workerInfo.textContent = `أنت العامل رقم ${workerId}`;
+
+// متابعة الطلبات المعيّنة للعامل
+const requestsRef = ref(db, "requests");
+
+onValue(requestsRef, snapshot=>{
+    tasksDiv.innerHTML = "";
+
+    snapshot.forEach(child=>{
+        const data = child.val();
+        const key = child.key;
+
+        if(data.worker == workerId){
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+                <div class="status">غرفة ${data.room}</div>
+                <div>الخدمة: ${data.service}</div>
+                <div>الحالة: ${data.status}</div>
+            `;
+
+            // زر جاري التنفيذ
+            if(data.status === "assigned"){
+                const btnStart = document.createElement("button");
+                btnStart.textContent = "جاري التنفيذ";
+                btnStart.className = "start";
+                btnStart.onclick = ()=>{
+                    update(ref(db, `requests/${key}`), {
+                        status:"working"
+                    });
+                };
+                card.appendChild(btnStart);
+            }
+
+            // زر تم الانتهاء
+            if(data.status === "working"){
+                const btnDone = document.createElement("button");
+                btnDone.textContent = "تم الانتهاء";
+                btnDone.className = "done";
+                btnDone.onclick = ()=>{
+                    // تحديث حالة الطلب
+                    update(ref(db, `requests/${key}`), {
+                        status:"done"
+                    });
+                    // تحديث حالة العامل ليصبح متاح (لون أخضر)
+                    update(ref(db, `workers/${workerId}`), {
+                        status:"available"
+                    });
+                };
+                card.appendChild(btnDone);
+
+                
+            }
+
+            tasksDiv.appendChild(card);
+        }
+    });
+});
+</script>
+
+</body>
+</html>
