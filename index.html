@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خدمة الغرف - الفندق</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    direction: rtl;
+    padding: 20px;
+}
+h1 {
+    text-align: center;
+    color: #333;
+}
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+button {
+    margin-top: 20px;
+    padding: 12px 20px;
+    width: 100%;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #218838;
+}
+.success {
+    color: green;
+    margin-top: 15px;
+    text-align: center;
+}
+#ratingBox {
+    display:none;
+    text-align:center;
+    margin-top:20px;
+}
+#stars span {
+    cursor: pointer;
+    font-size: 30px;
+    margin: 0 3px;
+}
+#ratingMsg {
+    color: green;
+    margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>خدمة الغرف - الفندق</h1>
+
+<div class="container">
+    <p id="roomInfo" style="font-weight:bold; text-align:center;"></p>
+
+    <label for="serviceType">نوع الخدمة المطلوبة:</label>
+    <select id="serviceType">
+        <option value="">اختر الخدمة</option>
+        <option value="نظافة">نظافة</option>
+        <option value="صيانة كهرباء">صيانة كهرباء</option>
+        <option value="سباكة">سباكة</option>
+        <option value="نجارة">نجارة</option>
+        <option value="مبيدات">مبيدات</option>
+    </select>
+
+    <button id="sendRequest">إرسال الطلب</button>
+    <div class="success" id="successMessage"></div>
+
+    <div id="ratingBox">
+        <p style="font-weight:bold;">قيّم الخدمة</p>
+        <div id="stars">
+            <span data-rate="1">⭐</span>
+            <span data-rate="2">⭐</span>
+            <span data-rate="3">⭐</span>
+            <span data-rate="4">⭐</span>
+            <span data-rate="5">⭐</span>
+        </div>
+        <p id="ratingMsg"></p>
+    </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
+    authDomain: "hotel-service-d1e98.firebaseapp.com",
+    databaseURL: "https://hotel-service-d1e98-default-rtdb.firebaseio.com",
+    projectId: "hotel-service-d1e98",
+    storageBucket: "hotel-service-d1e98.appspot.com",
+    messagingSenderId: "45614234588",
+    appId: "1:45614234588:web:8020bc86650e88d8a56d19"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// رقم الغرفة من الرابط
+const urlParams = new URLSearchParams(window.location.search);
+const roomNumber = urlParams.get("room");
+
+const roomInfo = document.getElementById("roomInfo");
+const sendBtn = document.getElementById("sendRequest");
+const successMessage = document.getElementById("successMessage");
+
+if (roomNumber) {
+    roomInfo.textContent = `أنت في الغرفة رقم ${roomNumber}`;
+} else {
+    roomInfo.textContent = "رقم الغرفة غير محدد في الرابط";
+}
+
+// ===== كود مراقبة اسم العامل =====
+if (roomNumber) {
+    const workerRef = database.ref("requests/room_" + roomNumber + "/workerName");
+    workerRef.on("value", snapshot => {
+        const name = snapshot.val();
+        if (name) {
+            roomInfo.textContent = `أنت في الغرفة رقم ${roomNumber} - العامل المسؤول: ${name}`;
+        }
+    });
+}
+
+// ===== إرسال الطلب =====
+sendBtn.addEventListener("click", () => {
+    const service = document.getElementById("serviceType").value;
+
+    if (!service) {
+        alert("الرجاء اختيار نوع الخدمة");
+        return;
+    }
+    if (!roomNumber) {
+        alert("رقم الغرفة غير محدد");
+        return;
+    }
+
+    // إرسال الطلب
+    database.ref("requests/room_" + roomNumber).set({
+        room: roomNumber,
+        service: service,
+        status: "new",
+        time: Date.now(),
+        workerName: "" // سيملأه المدير لاحقاً
+    });
+
+    successMessage.textContent = "تم إرسال الطلب بنجاح ✅";
+    document.getElementById("serviceType").value = "";
+    document.getElementById("ratingBox").style.display = "block";
+
+    // ===== كود التقييم =====
+    const stars = document.querySelectorAll("#stars span");
+    const ratingMsg = document.getElementById("ratingMsg");
+
+    stars.forEach(star => {
+        star.addEventListener("click", () => {
+            const rate = star.dataset.rate;
+            database.ref("ratings").push({
+                room: roomNumber,
+                workerName: document.getElementById("roomInfo").textContent.split(": ")[1] || "",
+                rating: rate,
+                date: new Date().toLocaleString("ar-EG")
+            });
+            ratingMsg.textContent = "تم إرسال التقييم ⭐ شكراً لك";
+            document.getElementById("stars").style.pointerEvents = "none";
+        });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تقييم العمال - الفندق</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    background: #f2f2f2;
+    padding: 20px;
+}
+h1 { text-align:center; margin-bottom:20px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+th {
+    background: #28a745;
+    color: white;
+}
+tr:nth-child(even) { background: #f9f9f9; }
+</style>
+</head>
+<body>
+
+<h1>لوحة تقييم العمال</h1>
+
+<table id="ratingsTable">
+<thead>
+    <tr>
+        <th>اسم العامل</th>
+        <th>رقم الغرفة</th>
+        <th>التقييم</th>
+        <th>تاريخ التقييم</th>
+    </tr>
+</thead>
+<tbody>
+    <!-- البيانات ستظهر هنا -->
+</tbody>
+</table>
+
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+// إعداد Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
+    authDomain: "hotel-service-d1e98.firebaseapp.com",
+    databaseURL: "https://hotel-service-d1e98-default-rtdb.firebaseio.com",
+    projectId: "hotel-service-d1e98",
+    storageBucket: "hotel-service-d1e98.appspot.com",
+    messagingSenderId: "45614234588",
+    appId: "1:45614234588:web:8020bc86650e88d8a56d19"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// أسماء العمال حسب الرقم
+const workerNames = {
+  "1": "أحمد","2": "محمد","3": "محمود","4": "علي","5": "حسن",
+  "6": "يوسف","7": "إبراهيم","8": "عبدالله","9": "عمر","10": "خالد",
+  "11": "سعيد","12": "طارق","13": "مصطفى","14": "رامي","15": "ياسر"
+};
+
+const tbody = document.querySelector("#ratingsTable tbody");
+
+// جلب التقييمات وعرضها
+firebase.database().ref("ratings").on("value", snapshot => {
+    tbody.innerHTML = ""; // تفريغ الجدول قبل التحديث
+    snapshot.forEach(child => {
+        const data = child.val();
+        const tr = document.createElement("tr");
+
+        const tdWorker = document.createElement("td");
+        tdWorker.textContent = workerNames[data.worker] || "غير محدد";
+        tr.appendChild(tdWorker);
+
+        const tdRoom = document.createElement("td");
+        tdRoom.textContent = data.room || "-";
+        tr.appendChild(tdRoom);
+
+        const tdRating = document.createElement("td");
+        tdRating.textContent = "⭐".repeat(data.rating || 0);
+        tr.appendChild(tdRating);
+
+        const tdDate = document.createElement("td");
+        tdDate.textContent = data.date || "-";
+        tr.appendChild(tdDate);
+
+        tbody.appendChild(tr);
+    });
+});
+</script>
+
+</body>
+</html>

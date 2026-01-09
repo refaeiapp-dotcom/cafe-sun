@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الإدارة – فندق</title>
+
+<style>
+body{
+    font-family:Arial;
+    direction:rtl;
+    background:#f9f9f9;
+    padding:20px;
+}
+h1{text-align:center;margin-bottom:20px}
+
+/* === التخطيط === */
+.main-layout{
+    display:grid;
+    grid-template-columns: 180px 120px 1fr;
+    gap:15px;
+    align-items:start;
+}
+
+/* === العمال === */
+.workers-col, .toggle-col{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.worker-box{
+    height:40px;
+    background:#28a745;
+    color:#fff;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+.worker-box.busy{background:#dc3545}
+.worker-box.hidden{visibility:hidden}
+
+/* === مفاتيح الإخفاء === */
+.toggle-btn{
+    height:40px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#6c757d;
+    color:white;
+    font-size:14px;
+}
+
+/* === الغرف === */
+.rooms{
+    display:grid;
+    grid-template-columns:repeat(10,50px);
+    gap:10px;
+}
+.room{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#ccc;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* === نافذة الطلب === */
+.overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+}
+.popup{
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    width:300px;
+}
+.popup button{
+    width:100%;
+    margin-top:15px;
+    padding:10px;
+    background:#007bff;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>لوحة الإدارة – فندق</h1>
+
+<div class="main-layout">
+
+    <!-- العمال -->
+    <div class="workers-col" id="workersCol"></div>
+
+    <!-- مفاتيح الإخفاء -->
+    <div class="toggle-col" id="toggleCol"></div>
+
+    <!-- الغرف -->
+    <div class="rooms" id="rooms"></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="popup" id="popup">
+    <p id="popupInfo"></p>
+    <select id="workerSelect"></select>
+    <button id="assignBtn">إرسال</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
+  authDomain: "hotel-service-d1e98.firebaseapp.com",
+  databaseURL: "https://hotel-service-d1e98-default-rtdb.firebaseio.com",
+  projectId: "hotel-service-d1e98",
+  storageBucket: "hotel-service-d1e98.firebasestorage.app",
+  messagingSenderId: "45614234588",
+  appId: "1:45614234588:web:8020bc86650e88d8a56d19"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* === أسماء العمال === */
+const workerNames = [
+ "أحمد","محمد","محمود","علي","حسن",
+ "يوسف","إبراهيم","عبدالله","عمر","خالد",
+ "سعيد","طارق","مصطفى","رامي","ياسر"
+];
+
+const workersCol = document.getElementById("workersCol");
+const toggleCol  = document.getElementById("toggleCol");
+const workerSelect = document.getElementById("workerSelect");
+
+/* === إنشاء العمال === */
+const workersState = {};
+
+workerNames.forEach((name,i)=>{
+    const id = i+1;
+    workersState[id] = true;
+
+    const box = document.createElement("div");
+    box.className = "worker-box";
+    box.dataset.worker = id;
+    box.textContent = `${name} (${id})`;
+    workersCol.appendChild(box);
+
+    const btn = document.createElement("button");
+    btn.className = "toggle-btn";
+    btn.textContent = "إخفاء";
+    btn.onclick = ()=>{
+        workersState[id] = !workersState[id];
+        box.classList.toggle("hidden");
+        btn.textContent = workersState[id] ? "إخفاء" : "إظهار";
+        refreshWorkerSelect();
+    };
+    toggleCol.appendChild(btn);
+});
+
+/* === قائمة العمال الظاهرين فقط === */
+function refreshWorkerSelect(){
+    workerSelect.innerHTML="";
+    Object.keys(workersState).forEach(id=>{
+        if(workersState[id]){
+            const op=document.createElement("option");
+            op.value=id;
+            op.textContent=workerNames[id-1]+" ("+id+")";
+            workerSelect.appendChild(op);
+        }
+    });
+}
+refreshWorkerSelect();
+
+/* === الغرف === */
+const roomsDiv = document.getElementById("rooms");
+let currentKey=null;
+
+for(let i=1;i<=100;i++){
+    const r=document.createElement("div");
+    r.className="room";
+    r.textContent=i;
+    r.dataset.room=i;
+    roomsDiv.appendChild(r);
+}
+
+// ===== حدث الضغط على الغرف لفتح نافذة الطلب =====
+roomsDiv.addEventListener("click", e=>{
+    const room = e.target.closest(".room");
+    if(!room) return;
+
+    const bg = room.style.background;
+    if(bg==="red" || bg==="orange"){ // الغرفة حمراء أو برتقالية
+        currentKey = room.dataset.key;
+        popupInfo.textContent = `الغرفة ${room.dataset.room}`;
+        popup.style.display = "block";
+        overlay.style.display = "block";
+    }
+});
+
+// ===== إغلاق النافذة عند الضغط على الـ overlay =====
+const overlay = document.getElementById("overlay");
+overlay.addEventListener("click", ()=>{
+    popup.style.display = overlay.style.display = "none";
+});
+
+// ===== Firebase الغرف =====
+onValue(ref(db,"requests"),snap=>{
+    snap.forEach(c=>{
+        const d=c.val();
+        const el=document.querySelector(`.room[data-room="${d.room}"]`);
+        if(!el)return;
+        el.dataset.key=c.key;
+        el.style.background=
+          d.status==="new"?"red":
+          d.status==="assigned"?"orange":
+          d.status==="working"?"green":"#ccc";
+    });
+});
+
+assignBtn.onclick=()=>{
+    const w=workerSelect.value;
+    if(!w) return;
+    update(ref(db,"requests/"+currentKey),{
+        status:"assigned",
+        worker:w
+    });
+    // تغيير مستطيل العامل مباشرة عند التعيين
+    const workerEl = workersCol.querySelector(`.worker-box[data-worker="${w}"]`);
+    if(workerEl) workerEl.classList.add("busy");
+
+    popup.style.display = overlay.style.display = "none";
+// تحديث لون مستطيل العامل تلقائيًا عند تغيير الحالة في Firebase
+onValue(ref(db, "workers"), snapshot => {
+    snapshot.forEach(child => {
+        const workerId = child.key;
+        const workerData = child.val();
+        const workerEl = workersCol.querySelector(`.worker-box[data-worker="${workerId}"]`);
+        if (workerEl) {
+            if (workerData.status === "busy") {
+                workerEl.classList.add("busy");  // أحمر عند إرسال الطلب
+            } else {
+                workerEl.classList.remove("busy"); // أخضر عند انتهاء العامل
+            }
+        }
+    });
+});
+
+};
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة الأعمال</title>
+<style>
+body {
+    font-family: Arial;
+    direction: rtl;
+    background: #f2f2f2;
+    padding: 20px;
+}
+h1 { text-align: center; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+th {
+    background: #007bff;
+    color: white;
+}
+.status-red { background: #dc3545; color: white; }
+.status-yellow { background: #ffc107; color: black; }
+.status-green { background: #28a745; color: white; }
+.status-blue { background: #0d6efd; color: white; }
+
+button {
+    margin-top: 15px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+}
+#printBtn { background: #007bff; color: white; }
+#resetBtn { background: #dc3545; color: white; }
+</style>
+</head>
+<body>
+
+<h1>لوحة متابعة الأعمال</h1>
+
+<button id="printBtn">طباعة PDF</button>
+<button id="resetBtn">تصفير البيانات</button>
+
+<table id="tasksTable">
+    <thead>
+        <tr>
+            <th>رقم الغرفة</th>
+            <th>نوع الخدمة</th>
+            <th>رقم العامل</th>
+            <th>الحالة</th>
+        </tr>
+    </thead>
+    <tbody id="tasksBody">
+        <!-- سيتم ملء الطلبات هنا -->
+    </tbody>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
+  authDomain: "hotel-service-d1e98.firebaseapp.com",
+  databaseURL: "https://hotel-service-d1e98-default-rtdb.firebaseio.com",
+  projectId: "hotel-service-d1e98",
+  storageBucket: "hotel-service-d1e98.firebasestorage.app",
+  messagingSenderId: "45614234588",
+  appId: "1:45614234588:web:8020bc86650e88d8a56d19"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const requestsRef = ref(db,"requests");
+
+const tasksBody = document.getElementById("tasksBody");
+const printBtn = document.getElementById("printBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+// عرض الطلبات
+function renderTasks(snapshot){
+    tasksBody.innerHTML = "";
+    snapshot.forEach(child=>{
+        const data = child.val();
+        const key = child.key;
+
+        const row = document.createElement("tr");
+
+        // رقم الغرفة
+        const roomCell = document.createElement("td");
+        roomCell.textContent = data.room;
+        row.appendChild(roomCell);
+
+        // نوع الخدمة
+        const serviceCell = document.createElement("td");
+        serviceCell.textContent = data.service;
+        row.appendChild(serviceCell);
+
+        // رقم العامل
+        const workerCell = document.createElement("td");
+        workerCell.textContent = data.worker || "-";
+        row.appendChild(workerCell);
+
+        // الحالة مع لون
+        const statusCell = document.createElement("td");
+        let statusClass = "";
+        switch(data.status){
+            case "new": statusClass="status-red"; break;
+            case "assigned": statusClass="status-yellow"; break;
+            case "working": statusClass="status-green"; break;
+            case "done": statusClass="status-blue"; break;
+            default: statusClass="";
+        }
+        statusCell.textContent = data.status;
+        if(statusClass) statusCell.classList.add(statusClass);
+        row.appendChild(statusCell);
+
+        tasksBody.appendChild(row);
+    });
+}
+
+// مراقبة البيانات
+onValue(requestsRef, snapshot=>{
+    renderTasks(snapshot);
+});
+
+// طباعة PDF
+printBtn.addEventListener("click", ()=>{
+    window.print();
+});
+
+// تصفير البيانات (حذف من Firebase)
+resetBtn.addEventListener("click", ()=>{
+    if(confirm("هل أنت متأكد من حذف جميع الطلبات من النظام؟")){
+        remove(requestsRef);
+    }
+});
+</script>
+
+</body>
+</html>
