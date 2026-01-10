@@ -77,15 +77,50 @@ button:hover {
 <div class="container">
     <p id="roomInfo" style="font-weight:bold; text-align:center;"></p>
 
-    <label for="serviceType">نوع الخدمة المطلوبة:</label>
-    <select id="serviceType">
-        <option value="">اختر الخدمة</option>
-        <option value="نظافة">نظافة</option>
-        <option value="صيانة كهرباء">صيانة كهرباء</option>
-        <option value="سباكة">سباكة</option>
-        <option value="نجارة">نجارة</option>
-        <option value="مبيدات">مبيدات</option>
-    </select>
+    <label for="serviceType">نوع الخدمة المطلوبة / Service Type:</label>
+<select id="serviceType">
+    <option value="">اختر الخدمة / Select Service</option>
+
+    <!-- تنظيف الغرفة -->
+    <option value="نظافة / Cleaning">نظافة / Cleaning</option>
+
+    <!-- صيانة كهرباء -->
+    <option value="صيانة كهرباء / Electrical Maintenance">صيانة كهرباء / Electrical Maintenance</option>
+
+    <!-- سباكة -->
+    <option value="سباكة / Plumbing">سباكة / Plumbing</option>
+
+    <!-- نجارة -->
+    <option value="نجارة / Carpentry">نجارة / Carpentry</option>
+
+    <!-- مكافحة الحشرات -->
+    <option value="مبيدات / Pest Control">مبيدات / Pest Control</option>
+
+    <!-- تكييف الهواء -->
+    <option value="تكييف / Air Conditioning">تكييف / Air Conditioning</option>
+
+    <!-- الإنترنت -->
+    <option value="إنترنت / Internet Issue">إنترنت / Internet Issue</option>
+
+    <!-- خدمة غرف إضافية -->
+    <option value="خدمة غرف / Room Service">خدمة غرف / Room Service</option>
+
+    <!-- التلفاز -->
+    <option value="تلفاز / TV Issue">تلفاز / TV Issue</option>
+
+    <!-- الإضاءة -->
+    <option value="إضاءة / Lighting Issue">إضاءة / Lighting Issue</option>
+
+    <!-- الباب / القفل -->
+    <option value="قفل / Door Lock Issue">قفل / Door Lock Issue</option>
+
+    <!-- المياه الساخنة -->
+    <option value="مياه ساخنة / Hot Water Issue">مياه ساخنة / Hot Water Issue</option>
+
+    <!-- أي مشكلة أخرى -->
+    <option value="أخرى / Other">أخرى / Other</option>
+</select>
+
 
     <button id="sendRequest">إرسال الطلب</button>
     <div class="success" id="successMessage"></div>
