@@ -120,13 +120,16 @@ h1{text-align:center;margin-bottom:20px}
 
 <div class="popup" id="popup">
     <p id="popupInfo"></p>
+<p id="serviceInfo" style="font-weight:bold;color:#007bff;margin-top:5px"></p>
+
+
     <select id="workerSelect"></select>
     <button id="assignBtn">إرسال</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKeYhspD650KtSoIKg-iyTnVIg3VFYFF4",
@@ -212,6 +215,18 @@ roomsDiv.addEventListener("click", e=>{
     if(bg==="red" || bg==="orange"){ // الغرفة حمراء أو برتقالية
         currentKey = room.dataset.key;
         popupInfo.textContent = `الغرفة ${room.dataset.room}`;
+// جلب نوع الخدمة من Firebase
+const serviceInfo = document.getElementById("serviceInfo");
+
+get(ref(db, "requests/" + room.dataset.key)).then(snapshot => {
+    if (snapshot.exists()) {
+        const data = snapshot.val();
+        serviceInfo.textContent = "نوع الخدمة المطلوبة: " + data.service;
+    } else {
+        serviceInfo.textContent = "";
+    }
+});
+
         popup.style.display = "block";
         overlay.style.display = "block";
     }
