@@ -64,8 +64,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const notifySound = document.getElementById("notifySound");
-const MY_WORKER_ID = 1; // ← عدل الرقم حسب رقم العامل
 
 // قراءة رقم العامل من الرابط
 const params = new URLSearchParams(window.location.search);
@@ -83,14 +81,6 @@ workerInfo.textContent = `أنت العامل رقم ${workerId}`;
 
 // متابعة الطلبات المعيّنة للعامل
 const requestsRef = ref(db, "requests");
-onChildAdded(requestsRef, snapshot => {
-    const data = snapshot.val();
-
-    if (data.status === "assigned" && data.worker == MY_WORKER_ID) {
-        notifySound.currentTime = 0;
-        notifySound.play().catch(() => {});
-    }
-});
 
 onValue(requestsRef, snapshot=>{
     tasksDiv.innerHTML = "";
@@ -147,6 +137,7 @@ onValue(requestsRef, snapshot=>{
     });
 });
 </script>
-<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+
 </body>
 </html>
+
