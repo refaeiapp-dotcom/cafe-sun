@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cafe Client</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f2f2f2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container{
+    width:95%;
+    max-width:420px;
+    background:white;
+    border-radius:18px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.15);
+    padding:20px;
+    text-align:center;
+}
+
+h1{ margin:10px 0 5px; font-size:26px; }
+
+.welcome{ color:#666; margin-bottom:25px; }
+
+button{
+    width:100%;
+    padding:18px;
+    margin:10px 0;
+    font-size:20px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+}
+
+.drinks{ background:#4CAF50; color:white;}
+.shisha{ background:#9C27B0; color:white;}
+.cashier{ background:#FF9800; color:white;}
+
+.statusBox{
+    margin-top:25px;
+    padding:15px;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    display:none;
+}
+
+.sent{ background:#fff3cd; color:#856404; }
+.processing{ background:#d4edda; color:#155724; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>☕ Cafe Harmony</h1>
+    <div class="welcome">أهلًا وسهلًا بحضرتك — اختر الخدمة</div>
+
+    <button class="drinks" onclick="sendRequest(1)">🍹 مشروبات</button>
+    <button class="shisha" onclick="sendRequest(2)">💨 شيشة</button>
+    <button class="cashier" onclick="sendRequest(3)">🧾 طلب حساب</button>
+
+    <div id="statusBox" class="statusBox"></div>
+</div>
+
+<script>
+// ================= Firebase Config =================
+var firebaseConfig = {
+  apiKey: "PUT_API_KEY_HERE",
+  authDomain: "PUT_AUTH_DOMAIN_HERE",
+  databaseURL: "PUT_DATABASE_URL_HERE",
+  projectId: "PUT_PROJECT_ID_HERE",
+  storageBucket: "PUT_STORAGE_BUCKET_HERE",
+  messagingSenderId: "PUT_MSG_ID_HERE",
+  appId: "PUT_APP_ID_HERE"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+// ===================================================
+
+// قراءة رقم الطاولة من الرابط
+const urlParams = new URLSearchParams(window.location.search);
+let tableNumber = urlParams.get('table');
+
+if(!tableNumber){
+    tableNumber = prompt("ادخل رقم الطاولة");
+}
+
+
+let currentRequestId = null;
+
+function sendRequest(type){
+    if(!tableNumber){
+        alert("رقم الطاولة غير موجود في الرابط");
+        return;
+    }
+
+    let box = document.getElementById("statusBox");
+    box.style.display = "block";
+    box.className = "statusBox sent";
+    box.innerText = "تم إرسال الطلب… في انتظار الاستجابة";
+
+    // إنشاء طلب جديد
+    let newRef = db.ref("requests").push();
+    currentRequestId = newRef.key;
+
+    newRef.set({
+        table: Number(tableNumber),
+        type: type,
+        ack: 0,
+        time: Date.now()
+    });
+
+    // مراقبة الاستجابة
+    db.ref("requests/" + currentRequestId + "/ack")
+      .on("value", function(snapshot){
+          if(snapshot.val() == 1){
+              box.className = "statusBox processing";
+              box.innerText = "جاري تنفيذ طلبك الآن";
+          }
+      });
+}
+</script>
+
+</body>
+</html>
