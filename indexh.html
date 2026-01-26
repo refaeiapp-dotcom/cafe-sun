@@ -31,7 +31,14 @@ body{
 
 h1{ margin:10px 0 5px; font-size:26px; }
 
-.welcome{ color:#666; margin-bottom:25px; }
+.welcome{ color:#666; margin-bottom:15px; }
+
+.tableNumber{
+    font-size:30px;
+    font-weight:bold;
+    margin-bottom:20px;
+    color:#333;
+}
 
 button{
     width:100%;
@@ -41,6 +48,11 @@ button{
     border:none;
     border-radius:12px;
     cursor:pointer;
+    transition:0.2s;
+}
+
+button:active{
+    transform:scale(0.98);
 }
 
 .drinks{ background:#4CAF50; color:white;}
@@ -66,10 +78,13 @@ button{
 <div class="container">
     <h1>☕ Cafe Harmony</h1>
     <div class="welcome">أهلًا وسهلًا بحضرتك — اختر الخدمة</div>
+    
+    <!-- رقم الطاولة -->
+    <div id="tableNumber" class="tableNumber">—</div>
 
-    <button class="drinks" onclick="sendRequest(1)">🍹 مشروبات</button>
-    <button class="shisha" onclick="sendRequest(2)">💨 شيشة</button>
-    <button class="cashier" onclick="sendRequest(3)">🧾 طلب حساب</button>
+    <button id="btnDrinks" class="drinks" onclick="sendRequest(1,this)">🍹 مشروبات</button>
+    <button id="btnShisha" class="shisha" onclick="sendRequest(2,this)">💨 شيشة</button>
+    <button id="btnCashier" class="cashier" onclick="sendRequest(3,this)">🧾 طلب حساب</button>
 
     <div id="statusBox" class="statusBox"></div>
 </div>
@@ -93,25 +108,28 @@ var db = firebase.database();
 const urlParams = new URLSearchParams(window.location.search);
 let tableNumber = urlParams.get('table');
 
+// لو الرقم مش موجود، اطلبه من المستخدم
 if(!tableNumber){
     tableNumber = prompt("ادخل رقم الطاولة");
 }
 
+// اعرض رقم الطاولة أعلى الأزرار
+document.getElementById("tableNumber").innerText = "طاولة رقم: " + tableNumber;
 
 let currentRequestId = null;
 
-function sendRequest(type){
-    if(!tableNumber){
-        alert("رقم الطاولة غير موجود في الرابط");
-        return;
-    }
+function sendRequest(type, btn){
+    // تغيير لون الزر عند الضغط مؤقتًا
+    const originalColor = btn.style.backgroundColor;
+    btn.style.backgroundColor = "#555"; // رمادي مؤقت
+    setTimeout(()=>{ btn.style.backgroundColor = originalColor; }, 300);
 
     let box = document.getElementById("statusBox");
     box.style.display = "block";
     box.className = "statusBox sent";
     box.innerText = "تم إرسال الطلب… في انتظار الاستجابة";
 
-    // إنشاء طلب جديد
+    // إنشاء طلب جديد في Firebase
     let newRef = db.ref("requests").push();
     currentRequestId = newRef.key;
 
@@ -128,6 +146,7 @@ function sendRequest(type){
           if(snapshot.val() == 1){
               box.className = "statusBox processing";
               box.innerText = "جاري تنفيذ طلبك الآن";
+              // هنا يمكن إضافة تنبيه صوتي إذا رغبت
           }
       });
 }
