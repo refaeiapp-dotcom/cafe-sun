@@ -79,8 +79,8 @@ button:active{
     <h1>☕ Cafe Harmony</h1>
     <div class="welcome">أهلًا وسهلًا بحضرتك — اختر الخدمة</div>
     
-    <!-- رقم الطاولة -->
-    <div id="tableNumber" class="tableNumber">—</div>
+    <!-- رقم الطاولة مكتوب مباشرة -->
+    <div id="tableNumber" class="tableNumber">طاولة رقم: 7</div>
 
     <button id="btnDrinks" class="drinks" onclick="sendRequest(1,this)">🍹 مشروبات</button>
     <button id="btnShisha" class="shisha" onclick="sendRequest(2,this)">💨 شيشة</button>
@@ -104,17 +104,8 @@ firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 // ===================================================
 
-// قراءة رقم الطاولة من الرابط
-const urlParams = new URLSearchParams(window.location.search);
-let tableNumber = urlParams.get('table');
-
-// لو الرقم مش موجود، اطلبه من المستخدم
-if(!tableNumber){
-    tableNumber = prompt("ادخل رقم الطاولة");
-}
-
-// اعرض رقم الطاولة أعلى الأزرار
-document.getElementById("tableNumber").innerText = "طاولة رقم: " + tableNumber;
+// رقم الطاولة ثابت ومضمون
+const tableNumber = 7; // نفس الرقم المكتوب في الصفحة
 
 let currentRequestId = null;
 
@@ -146,7 +137,7 @@ function sendRequest(type, btn){
           if(snapshot.val() == 1){
               box.className = "statusBox processing";
               box.innerText = "جاري تنفيذ طلبك الآن";
-              // هنا يمكن إضافة تنبيه صوتي إذا رغبت
+              // يمكن إضافة تنبيه صوتي هنا لاحقًا
           }
       });
 }
