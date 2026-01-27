@@ -2,13 +2,17 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إيرسل</title>
+  <title>إرسال</title>
 </head>
-<body style="text-align:center; margin-top:50px;">
+<body style="text-align:center; margin-top:60px;">
 
-<a href="receiver.html" target="_blank">
-  <button>فتح صفحة التنبيه</button>
-</a>
+<button onclick="openReceiver()">إرسال تنبيه</button>
+
+<script>
+function openReceiver() {
+  window.open("receiver.html", "_blank");
+}
+</script>
 
 </body>
 </html>
