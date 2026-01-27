@@ -6,17 +6,29 @@
 </head>
 <body style="text-align:center; margin-top:50px;">
 
-<h2>🔔 تنبيه</h2>
+<h2 id="msg">🔔 في انتظار التنبيه</h2>
 
-<button onclick="playSound()">تشغيل انذار</button>
-
-<audio id="sound" src="alert.mp3" preload="auto"></audio>
+<audio id="bell" src="alert.mp3" preload="auto"></audio>
 
 <script>
+const bell = document.getElementById("bell");
+
+// لو المستخدم وافق قبل كده
+if (localStorage.getItem("audioAllowed") === "yes") {
+  playSound();
+} else {
+  // أول مرة فقط
+  document.body.onclick = () => {
+    localStorage.setItem("audioAllowed", "yes");
+    playSound();
+    document.body.onclick = null;
+  };
+}
+
 function playSound() {
-  const sound = document.getElementById("sound");
-  sound.currentTime = 0;
-  sound.play();
+  bell.currentTime = 0;
+  bell.play();
+  document.getElementById("msg").innerText = "🔔 تنبيه صوتي";
 }
 </script>
 
