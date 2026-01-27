@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>إرسال</title>
+<meta charset="UTF-8">
+<title>إرسال</title>
 </head>
-<body style="text-align:center; margin-top:60px;">
+<body>
 
-<button onclick="openReceiver()">إرسال تنبيه</button>
+<button onclick="send()">إرسال تنبيه</button>
 
 <script>
-function openReceiver() {
-  window.open("receiver.html", "_blank");
+function send() {
+  localStorage.setItem("playSound", "yes");
 }
 </script>
 
