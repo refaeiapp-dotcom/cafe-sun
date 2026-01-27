@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>استقبال</title>
+  <meta charset="UTF-8">
+  <title>استقبال التنبيه</title>
 </head>
-<body>
+<body style="text-align:center; margin-top:50px;">
 
-<h2>🔔 في انتظار تنبيه</h2>
-<audio id="bell" src="alert.mp3"></audio>
+<h2 id="status">🔔 في انتظار التنبيه</h2>
+
+<audio id="bell" src="alert.mp3" preload="auto"></audio>
 
 <script>
 const bell = document.getElementById("bell");
+const status = document.getElementById("status");
 
-// طلب موافقة مرة واحدة
-document.body.onclick = () => {
-  localStorage.setItem("audioAllowed","yes");
-};
+// تأكد من موافقة المستخدم على تشغيل الصوت مرة واحدة
+if (!localStorage.getItem("audioAllowed")) {
+  status.innerText = "اضغط أي مكان لتفعيل الصوت مرة واحدة";
+  document.body.onclick = () => {
+    localStorage.setItem("audioAllowed", "yes");
+    document.body.onclick = null;
+  };
+}
 
+// مراقبة الإشارة كل نصف ثانية
 setInterval(() => {
-  if (localStorage.getItem("playSound") === "yes") {
-    localStorage.removeItem("playSound");
+  if (localStorage.getItem("playBell") === "true" && localStorage.getItem("audioAllowed") === "yes") {
     bell.currentTime = 0;
     bell.play();
+    status.innerText = "🔔 تم تشغيل التنبيه!";
+    localStorage.removeItem("playBell"); // منع التكرار
   }
 }, 500);
 </script>
