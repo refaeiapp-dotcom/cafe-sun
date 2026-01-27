@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تنبيه</title>
+</head>
+<body style="text-align:center; margin-top:50px; font-size:20px;">
+
+<h2>🔔 تنبيه جديد</h2>
+
+<audio id="sound" src="alert.mp3" preload="auto"></audio>
+
+<script>
+window.onload = function () {
+  const sound = document.getElementById("sound");
+  sound.currentTime = 0;
+  sound.play();
+};
+</script>
+
+</body>
+</html>
