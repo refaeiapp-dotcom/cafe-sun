@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>إرسال</title>
+  <meta charset="UTF-8">
+  <title>إرسال تنبيه</title>
 </head>
-<body>
+<body style="text-align:center; margin-top:50px;">
 
+<h2>صفحة الإرسال</h2>
 <button onclick="send()">إرسال تنبيه</button>
 
 <script>
 function send() {
-  localStorage.setItem("playSound", "yes");
+  // ضع إشارة للتشغيل
+  localStorage.setItem("playBell", "true");
+  alert("تم إرسال التنبيه!"); // اختياري للتجربة
 }
 </script>
 
