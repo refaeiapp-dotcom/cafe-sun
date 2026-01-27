@@ -1,35 +1,29 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>تنبيه</title>
+<meta charset="UTF-8">
+<title>استقبال</title>
 </head>
-<body style="text-align:center; margin-top:50px;">
+<body>
 
-<h2 id="msg">🔔 في انتظار التنبيه</h2>
-
-<audio id="bell" src="alert.mp3" preload="auto"></audio>
+<h2>🔔 في انتظار تنبيه</h2>
+<audio id="bell" src="alert.mp3"></audio>
 
 <script>
 const bell = document.getElementById("bell");
 
-// لو المستخدم وافق قبل كده
-if (localStorage.getItem("audioAllowed") === "yes") {
-  playSound();
-} else {
-  // أول مرة فقط
-  document.body.onclick = () => {
-    localStorage.setItem("audioAllowed", "yes");
-    playSound();
-    document.body.onclick = null;
-  };
-}
+// طلب موافقة مرة واحدة
+document.body.onclick = () => {
+  localStorage.setItem("audioAllowed","yes");
+};
 
-function playSound() {
-  bell.currentTime = 0;
-  bell.play();
-  document.getElementById("msg").innerText = "🔔 تنبيه صوتي";
-}
+setInterval(() => {
+  if (localStorage.getItem("playSound") === "yes") {
+    localStorage.removeItem("playSound");
+    bell.currentTime = 0;
+    bell.play();
+  }
+}, 500);
 </script>
 
 </body>
